@@ -178,8 +178,11 @@
     
     <!-- Giao diện Admin / Dashboard -->
     <div id="view-dashboard" class="hidden bg-white rounded-xl shadow-lg border border-blue-200 p-5 mb-8 flex-1 flex-col animate-fade-in">
-      <div class="flex items-center justify-center mb-4 border-b pb-3">
+      <div class="flex items-center justify-between mb-4 border-b pb-3">
         <h2 class="text-lg font-bold text-blue-800 uppercase tracking-wider"><i class="fas fa-chart-pie mr-2"></i>Thống Kê Sĩ Số</h2>
+        <button id="btn-refresh-dash" onclick="App.refreshDashboard(this)" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center">
+          <i class="fas fa-sync-alt mr-1"></i> Làm mới
+        </button>
       </div>
 
       <!-- Thống kê theo Tổ chuyên môn -->
@@ -487,6 +490,25 @@
         
         document.getElementById('dash-missing-list').innerHTML = renderList(missingList, true);
         document.getElementById('dash-late-list').innerHTML = renderList(absentLateList, false);
+      },
+
+      refreshDashboard: async (btnEl) => {
+        const originalHtml = btnEl.innerHTML;
+        btnEl.innerHTML = `<i class="fas fa-sync-alt fa-spin mr-1"></i> Đang tải...`;
+        btnEl.disabled = true;
+        btnEl.classList.add('opacity-50', 'cursor-not-allowed');
+        
+        try {
+           await App.loadAttendanceData();
+           App.renderDashboard();
+           App.showToast("Đã cập nhật dữ liệu sĩ số mới nhất!", "success");
+        } catch(e) {
+           console.error(e);
+        } finally {
+           btnEl.innerHTML = originalHtml;
+           btnEl.disabled = false;
+           btnEl.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
       },
 
       init: async () => {

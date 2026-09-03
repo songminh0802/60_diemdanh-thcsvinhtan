@@ -453,6 +453,7 @@
       submitAttendance: async (btnEl) => {
         const maGV = document.getElementById('inp-select-gv').value;
         const tenGV = document.getElementById('inp-select-gv').options[document.getElementById('inp-select-gv').selectedIndex].text;
+        const selectedTo = document.getElementById('inp-filter-to').value;
         if (!maGV) return;
 
         const selectedRadio = document.querySelector('input[name="status"]:checked');
@@ -475,6 +476,8 @@
             data: {
               maCuocHop: maCuocHop,
               maGV: maGV,
+              hoTen: tenGV,
+              toChuyenMon: selectedTo,
               trangThai: trangThai,
               ghiChu: ""
             }

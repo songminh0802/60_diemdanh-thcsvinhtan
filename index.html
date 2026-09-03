@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Điểm danh Cuộc họp</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Custom scrollbar and minor tweaks */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .toast-enter { animation: toast-in-right 0.3s; }
+    @keyframes toast-in-right {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid #ffffff;
+      width: 1.5rem;
+      height: 1.5rem;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-20">
+
+  <!-- Header -->
+  <header class="bg-blue-600 text-white shadow-md sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="App.navigate('home')">
+        <i class="fas fa-clipboard-check text-2xl"></i>
+        <h1 class="text-xl font-bold truncate">Điểm danh Vĩnh Tân</h1>
+      </div>
+      <button id="btn-home" onclick="App.navigate('home')" class="hidden hover:bg-blue-700 p-2 rounded-full transition">
+        <i class="fas fa-home"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container mx-auto px-4 mt-6 max-w-3xl" id="app-container">
+    
+    <!-- VIEW: HOME (Danh sách cuộc họp) -->
+    <div id="view-home" class="view-section">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-700">Các cuộc họp đang mở</h2>
+        <button onclick="App.navigate('create')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-md transition flex items-center">
+          <i class="fas fa-plus mr-2"></i> Tạo mới
+        </button>
+      </div>
+      <div id="list-cuochop" class="space-y-4">
+        <!-- Danh sách render động -->
+        <div class="text-center text-gray-500 py-8"><i class="fas fa-circle-notch fa-spin text-2xl"></i> Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- VIEW: CREATE MEETING -->
+    <div id="view-create" class="view-section hidden">
+      <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2"><i class="fas fa-calendar-plus mr-2 text-blue-500"></i>Tạo cuộc họp mới</h2>
+        <form id="form-create" onsubmit="App.createMeeting(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tên cuộc họp (*)</label>
+            <input type="text" id="inp-ten" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Loại cuộc họp (*)</label>
+            <select id="inp-loai" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="Họp chi bộ">Họp chi bộ</option>
+              <option value="Họp hội đồng">Họp hội đồng</option>
+              <option value="Họp tổ">Họp tổ</option>
+              <option value="Họp trung tâm">Họp trung tâm</option>
+              <option value="Họp khác">Họp khác</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian</label>
+              <input type="text" id="inp-thoigian" placeholder="VD: 14h00 12/09" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Địa điểm</label>
+              <input type="text" id="inp-diadiem" placeholder="VD: Phòng Hội đồng" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu Admin (*)</label>
+            <input type="password" id="inp-password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="pt-4 flex space-x-3">
+            <button type="button" onclick="App.navigate('home')" class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">Hủy</button>
+            <button type="submit" id="btn-submit-create" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition flex justify-center items-center">
+              Tạo cuộc họp
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- VIEW: MEETING DETAIL (ĐIỂM DANH) -->
+    <div id="view-detail" class="view-section hidden">
+      <div class="bg-white rounded-xl shadow-md p-4 mb-4 border border-blue-100 border-l-4 border-l-blue-500">
+        <h2 id="detail-title" class="text-lg font-bold text-gray-800">Tên cuộc họp</h2>
+        <p id="detail-meta" class="text-sm text-gray-500 mt-1">Thời gian - Địa điểm</p>
+      </div>
+
+      <div class="flex space-x-2 mb-4">
+        <div class="relative flex-1">
+          <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+          <input type="text" id="inp-search-gv" placeholder="Tìm tên GV..." oninput="App.filterGiaoVien()" class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <select id="inp-filter-to" onchange="App.filterGiaoVien()" class="border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <option value="ALL">Tất cả tổ</option>
+          <!-- Sẽ render động options -->
+        </select>
+      </div>
+
+      <!-- Danh sách giáo viên -->
+      <div id="list-giaovien" class="space-y-3">
+        <!-- Render động -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
+
+  <!-- Bắt đầu Script -->
+  <script>
+    // ==========================================
+    // CẤU HÌNH HỆ THỐNG
+    // ==========================================
+    // TODO: THAY ĐỔI URL DƯỚI ĐÂY SAU KHI DEPLOY GAS WEB APP
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby_TEST_APP_ID/exec"; 
+    
+    // ==========================================
+    // TRẠNG THÁI ỨNG DỤNG (STATE)
+    // ==========================================
+    const App = {
+      state: {
+        cuocHop: [],
+        giaoVien: [],
+        diemDanh: {}, // { "maGV": { trangThai, ghiChu } }
+        currentMaCuocHop: null,
+        toChuyenMon: new Set()
+      },
+
+      // ----------------------------------------
+      // UI Utils
+      // ----------------------------------------
+      showToast: (message, type = 'success') => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const colors = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-blue-500');
+        const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+        
+        toast.className = `toast-enter ${colors} text-white px-4 py-3 rounded shadow-lg flex items-center space-x-2`;
+        toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transition = 'opacity 0.3s ease';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      },
+
+      setLoadingBtn: (btnId, isLoading, originalText = '') => {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        if (isLoading) {
+          btn.disabled = true;
+          btn.dataset.originalText = btn.innerHTML;
+          btn.innerHTML = `<div class="spinner"></div>`;
+          btn.classList.add('opacity-70', 'cursor-not-allowed');
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = originalText || btn.dataset.originalText;
+          btn.classList.remove('opacity-70', 'cursor-not-allowed');
+        }
+      },
+
+      navigate: (viewId) => {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`view-${viewId}`).classList.remove('hidden');
+        
+        const btnHome = document.getElementById('btn-home');
+        if (viewId === 'home') {
+          btnHome.classList.add('hidden');
+          App.loadCuocHop();
+        } else {
+          btnHome.classList.remove('hidden');
+        }
+      },
+
+      escapeHtml: (unsafe) => {
+        return (unsafe || "").toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      },
+
+      getColorByLoai: (loai) => {
+        switch (loai) {
+          case 'Họp chi bộ': return 'bg-red-100 text-red-700 border-red-200';
+          case 'Họp hội đồng': return 'bg-blue-100 text-blue-700 border-blue-200';
+          case 'Họp tổ': return 'bg-green-100 text-green-700 border-green-200';
+          case 'Họp trung tâm': return 'bg-purple-100 text-purple-700 border-purple-200';
+          default: return 'bg-gray-100 text-gray-700 border-gray-200';
+        }
+      },
+
+      // ----------------------------------------
+      // API Calls
+      // ----------------------------------------
+      fetchAPI: async (action, method = 'GET', data = null) => {
+        try {
+          if (WEB_APP_URL.includes('TEST_APP_ID')) {
+             throw new Error("Vui lòng thay đổi WEB_APP_URL trong file index.html");
+          }
+          
+          let url = `${WEB_APP_URL}?action=${action}`;
+          let options = {};
+          
+          if (method === 'POST') {
+            options = {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Dùng text/plain để tránh CORS Preflight nếu fetch mode là no-cors
+              body: JSON.stringify({ action, ...data })
+            };
+          }
+          
+          const response = await fetch(url, options);
+          const result = await response.json();
+          if (!result.success) throw new Error(result.message);
+          return result.data || result;
+        } catch (error) {
+          console.error("API Error:", error);
+          App.showToast(error.message, 'error');
+          throw error;
+        }
+      },
+
+      // ----------------------------------------
+      // Business Logic
+      // ----------------------------------------
+      loadCuocHop: async () => {
+        const listEl = document.getElementById('list-cuochop');
+        try {
+          listEl.innerHTML = `<div class="text-center text-gray-500 py-8"><i class="fas fa-circle-notch fa-spin text-2xl"></i> Đang tải danh sách...</div>`;
+          const data = await App.fetchAPI('getCuocHop');
+          App.state.cuocHop = data;
+          
+          if (data.length === 0) {
+            listEl.innerHTML = `<div class="text-center text-gray-500 py-8 bg-white rounded-lg shadow-sm">Chưa có cuộc họp nào đang mở.</div>`;
+            return;
+          }
+
+          let html = '';
+          data.forEach(ch => {
+            const tagColor = App.getColorByLoai(ch.loaiCuocHop);
+            html += `
+              <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition cursor-pointer flex justify-between items-center" 
+                   data-id="${App.escapeHtml(ch.maCuocHop)}">
+                <div>
+                  <h3 class="font-bold text-gray-800 text-lg mb-1">${App.escapeHtml(ch.tenCuocHop)}</h3>
+                  <div class="flex items-center space-x-2 text-sm">
+                    <span class="px-2 py-0.5 rounded text-xs border font-medium ${tagColor}">${App.escapeHtml(ch.loaiCuocHop)}</span>
+                    <span class="text-gray-500"><i class="far fa-clock mr-1"></i>${App.escapeHtml(ch.thoiGian)}</span>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+              </div>
+            `;
+          });
+          listEl.innerHTML = html;
+        } catch (error) {
+          listEl.innerHTML = `<div class="text-center text-red-500 py-8">Lỗi tải dữ liệu.</div>`;
+        }
+      },
+
+      loadGiaoVienData: async () => {
+        if (App.state.giaoVien.length === 0) {
+          App.state.giaoVien = await App.fetchAPI('getGiaoVien');
+          App.state.toChuyenMon = new Set(App.state.giaoVien.map(gv => gv.toChuyenMon).filter(Boolean));
+          
+          // Populate Filter
+          const filterTo = document.getElementById('inp-filter-to');
+          let opts = `<option value="ALL">Tất cả tổ</option>`;
+          Array.from(App.state.toChuyenMon).sort().forEach(to => {
+            opts += `<option value="${App.escapeHtml(to)}">${App.escapeHtml(to)}</option>`;
+          });
+          filterTo.innerHTML = opts;
+        }
+      },
+
+      openMeeting: async (maCuocHop) => {
+        const ch = App.state.cuocHop.find(c => c.maCuocHop === maCuocHop);
+        if (!ch) return;
+        
+        App.state.currentMaCuocHop = maCuocHop;
+        document.getElementById('detail-title').textContent = ch.tenCuocHop;
+        document.getElementById('detail-meta').textContent = `${ch.loaiCuocHop} | ${ch.thoiGian} | ${ch.diaDiem}`;
+        document.getElementById('inp-search-gv').value = '';
+        document.getElementById('inp-filter-to').value = 'ALL';
+        
+        App.navigate('detail');
+        const listEl = document.getElementById('list-giaovien');
+        listEl.innerHTML = `<div class="text-center text-gray-500 py-8"><i class="fas fa-circle-notch fa-spin text-2xl"></i> Đang tải danh sách & trạng thái...</div>`;
+        
+        try {
+          // Tải danh sách GV và dữ liệu điểm danh song song
+          const [_, diemDanhMapResult] = await Promise.all([
+            App.loadGiaoVienData(),
+            App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop: maCuocHop } })
+          ]);
+          
+          App.state.diemDanh = diemDanhMapResult.data || {};
+          App.renderGiaoVienList();
+        } catch (error) {
+           listEl.innerHTML = `<div class="text-center text-red-500 py-8">Lỗi tải dữ liệu giáo viên.</div>`;
+        }
+      },
+
+      filterGiaoVien: () => {
+        App.renderGiaoVienList();
+      },
+
+      renderGiaoVienList: () => {
+        const search = document.getElementById('inp-search-gv').value.toLowerCase();
+        const to = document.getElementById('inp-filter-to').value;
+        const listEl = document.getElementById('list-giaovien');
+        
+        let filtered = App.state.giaoVien.filter(gv => {
+          const matchSearch = gv.hoTen.toLowerCase().includes(search);
+          const matchTo = to === 'ALL' || gv.toChuyenMon === to;
+          return matchSearch && matchTo;
+        });
+
+        if (filtered.length === 0) {
+          listEl.innerHTML = `<div class="text-center text-gray-500 py-4">Không tìm thấy giáo viên.</div>`;
+          return;
+        }
+
+        let html = '';
+        filtered.forEach(gv => {
+          const dd = App.state.diemDanh[gv.maGV] || {};
+          const status = dd.trangThai || '';
+          
+          const btnActive = "bg-blue-600 text-white font-medium border-blue-600";
+          const btnInactive = "bg-white text-gray-600 font-medium border-gray-300 hover:bg-gray-50";
+          
+          html += `
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4" data-magv="${App.escapeHtml(gv.maGV)}">
+              <div class="flex justify-between items-start mb-3">
+                <div>
+                  <h4 class="font-bold text-gray-800">${App.escapeHtml(gv.hoTen)}</h4>
+                  <span class="text-xs text-gray-500">${App.escapeHtml(gv.toChuyenMon)}</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs ${status ? 'text-green-600 font-bold' : 'text-gray-400'}">
+                    ${status ? '<i class="fas fa-check mr-1"></i>Đã ĐD' : 'Chưa ĐD'}
+                  </span>
+                </div>
+              </div>
+              <div class="grid grid-cols-4 gap-2 actions-container">
+                <button data-action="mark" data-status="Có mặt" class="border py-1.5 rounded-md text-sm transition ${status === 'Có mặt' ? btnActive : btnInactive}">Có mặt</button>
+                <button data-action="mark" data-status="Đi trễ" class="border py-1.5 rounded-md text-sm transition ${status === 'Đi trễ' ? btnActive : btnInactive}">Đi trễ</button>
+                <button data-action="mark" data-status="Vắng phép" class="border py-1.5 rounded-md text-sm transition ${status === 'Vắng phép' ? btnActive : btnInactive}">V phép</button>
+                <button data-action="mark" data-status="Vắng KP" class="border py-1.5 rounded-md text-sm transition ${status === 'Vắng KP' ? btnActive : btnInactive}">Vắng KP</button>
+              </div>
+            </div>
+          `;
+        });
+        listEl.innerHTML = html;
+      },
+
+      markAttendance: async (maGV, trangThai, buttonEl) => {
+        // Optimistic UI update
+        const container = buttonEl.closest('.actions-container');
+        container.querySelectorAll('button').forEach(b => {
+           b.className = "border py-1.5 rounded-md text-sm transition bg-white text-gray-600 font-medium border-gray-300 hover:bg-gray-50";
+        });
+        buttonEl.className = "border py-1.5 rounded-md text-sm transition bg-blue-600 text-white font-medium border-blue-600";
+        
+        try {
+          await App.fetchAPI('saveDiemDanh', 'POST', {
+            data: {
+              maCuocHop: App.state.currentMaCuocHop,
+              maGV: maGV,
+              trangThai: trangThai,
+              ghiChu: ""
+            }
+          });
+          // Lưu vào state để rerender không bị mất
+          if (!App.state.diemDanh[maGV]) App.state.diemDanh[maGV] = {};
+          App.state.diemDanh[maGV].trangThai = trangThai;
+          
+          // Cập nhật text "Đã ĐD"
+          const card = buttonEl.closest('.bg-white');
+          const statusText = card.querySelector('.text-right span');
+          statusText.className = "text-xs text-green-600 font-bold";
+          statusText.innerHTML = '<i class="fas fa-check mr-1"></i>Đã ĐD';
+
+        } catch (error) {
+           // Hoàn tác UI nếu lỗi
+           App.renderGiaoVienList();
+        }
+      },
+
+      createMeeting: async (e) => {
+        e.preventDefault();
+        const ten = document.getElementById('inp-ten').value.trim();
+        const loai = document.getElementById('inp-loai').value;
+        const thoigian = document.getElementById('inp-thoigian').value.trim();
+        const diadiem = document.getElementById('inp-diadiem').value.trim();
+        const pass = document.getElementById('inp-password').value;
+
+        if (!ten || !pass) {
+          App.showToast("Vui lòng điền các trường bắt buộc", "error");
+          return;
+        }
+
+        App.setLoadingBtn('btn-submit-create', true);
+        try {
+          const res = await App.fetchAPI('createCuocHop', 'POST', {
+            password: pass,
+            data: {
+              tenCuocHop: ten,
+              loaiCuocHop: loai,
+              thoiGian: thoigian,
+              diaDiem: diadiem
+            }
+          });
+          App.showToast(res.message);
+          document.getElementById('form-create').reset();
+          App.navigate('home'); // Quay lại trang chủ, hàm này sẽ load lại danh sách
+        } catch (error) {
+          // Lỗi đã được showToast trong fetchAPI
+        } finally {
+          App.setLoadingBtn('btn-submit-create', false);
+        }
+      }
+    };
+
+    // ==========================================
+    // EVENT DELEGATION
+    // ==========================================
+    document.getElementById('list-cuochop').addEventListener('click', (e) => {
+      const item = e.target.closest('[data-id]');
+      if (item) {
+        App.openMeeting(item.dataset.id);
+      }
+    });
+
+    document.getElementById('list-giaovien').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action="mark"]');
+      if (btn) {
+        const card = btn.closest('[data-magv]');
+        if (card) {
+          const maGV = card.dataset.magv;
+          const status = btn.dataset.status;
+          App.markAttendance(maGV, status, btn);
+        }
+      }
+    });
+
+    // INIT
+    window.addEventListener('DOMContentLoaded', () => {
+      App.navigate('home');
+    });
+
+  </script>
+</body>
+</html>

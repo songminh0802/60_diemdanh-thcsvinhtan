@@ -3,55 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Điểm danh Nhanh - THCS Vĩnh Tân</title>
+  <title>Tự Điểm Danh - THCS Vĩnh Tân</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    .toast-enter { animation: toast-in-right 0.3s; }
-    @keyframes toast-in-right {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    body { background-color: #f8fafc; }
+    .toast-enter { animation: toast-in-top 0.3s forwards; }
+    @keyframes toast-in-top {
+      from { transform: translate(-50%, -100%); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
     }
     .spinner {
       border: 3px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
       border-top: 3px solid #ffffff;
-      width: 1.5rem;
-      height: 1.5rem;
+      width: 1.2rem;
+      height: 1.2rem;
       animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: text-bottom;
+      margin-right: 5px;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-20">
+<body class="text-gray-800 font-sans min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="bg-blue-600 text-white shadow-md sticky top-0 z-10">
-    <div class="container mx-auto px-4 py-3 flex items-center justify-center">
-      <div class="flex items-center space-x-3">
-        <i class="fas fa-clipboard-check text-2xl"></i>
-        <h1 class="text-xl font-bold truncate">Điểm danh Vĩnh Tân</h1>
+  <header class="bg-blue-600 text-white shadow-md">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-center">
+      <div class="flex items-center space-x-2">
+        <i class="fas fa-check-double text-2xl"></i>
+        <h1 class="text-xl font-bold uppercase tracking-wider">Hệ Thống Điểm Danh</h1>
       </div>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="container mx-auto px-4 mt-6 max-w-3xl" id="app-container">
+  <main class="container mx-auto px-4 mt-6 max-w-lg flex-1 flex flex-col" id="app-container">
     
-    <!-- Thanh công cụ (Cấu hình cuộc họp) -->
-    <div class="bg-white rounded-xl shadow-md p-4 mb-5 border-t-4 border-t-blue-500">
+    <!-- Bước 1: Thông tin cuộc họp -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-4">
+      <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3"><i class="far fa-calendar-alt mr-1"></i> Thông tin buổi họp</h2>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Ngày điểm danh</label>
-          <input type="date" id="inp-date" onchange="App.reloadAttendance()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Ngày</label>
+          <input type="date" id="inp-date" onchange="App.reloadAttendance()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-gray-50">
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Loại cuộc họp</label>
-          <select id="inp-loai" onchange="App.reloadAttendance()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-white">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Loại họp</label>
+          <select id="inp-loai" onchange="App.reloadAttendance()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-gray-50">
             <option value="Họp chi bộ">Họp chi bộ</option>
             <option value="Họp hội đồng">Họp hội đồng</option>
             <option value="Họp tổ">Họp tổ</option>
@@ -62,37 +63,62 @@
       </div>
     </div>
 
-    <!-- Bộ lọc Giáo viên -->
-    <div class="flex space-x-2 mb-4">
-      <div class="relative flex-1">
-        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
-        <input type="text" id="inp-search-gv" placeholder="Tìm tên GV..." oninput="App.filterGiaoVien()" class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <select id="inp-filter-to" onchange="App.filterGiaoVien()" class="border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-        <option value="ALL">Tất cả tổ</option>
-        <!-- Sẽ render động options -->
-      </select>
+    <!-- Cảnh báo Loading Tổng -->
+    <div id="loading-overlay" class="hidden bg-white rounded-xl shadow-sm border border-blue-100 p-8 mb-4 text-center">
+      <i class="fas fa-circle-notch fa-spin text-4xl text-blue-500 mb-3"></i>
+      <p class="text-gray-500 font-medium">Đang tải dữ liệu, vui lòng chờ...</p>
     </div>
 
-    <!-- Danh sách giáo viên -->
-    <div id="list-giaovien" class="space-y-3">
-      <div class="text-center text-gray-500 py-10 bg-white rounded-lg shadow-sm border border-gray-100">
-        <i class="fas fa-circle-notch fa-spin text-3xl mb-3 text-blue-500"></i>
-        <p>Đang tải dữ liệu giáo viên...</p>
-      </div>
-    </div>
+    <!-- Bước 2: Form Tự Điểm Danh -->
+    <div id="self-service-form" class="bg-white rounded-xl shadow-lg border border-gray-200 p-5 flex-1 mb-6 flex flex-col">
+      <h2 class="text-lg font-bold text-blue-700 mb-5 border-b pb-2"><i class="fas fa-user-check mr-2"></i>Chọn tên của bạn</h2>
+      
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">1. Tổ chuyên môn</label>
+          <select id="inp-filter-to" onchange="App.onSelectTo()" class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-lg bg-white">
+            <option value="" disabled selected>-- Chọn Tổ của bạn --</option>
+            <!-- Options rendered via JS -->
+          </select>
+        </div>
 
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-1">2. Họ và Tên</label>
+          <select id="inp-select-gv" onchange="App.onSelectGV()" disabled class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium text-lg bg-gray-100 disabled:opacity-60 transition-colors">
+            <option value="" disabled selected>-- Chọn Tên của bạn --</option>
+            <!-- Options rendered via JS -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Khu vực hành động (Sẽ hiện ra khi chọn Tên) -->
+      <div id="action-area" class="hidden flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-100 mt-auto">
+        <div id="status-display" class="mb-4 text-center">
+          <span class="text-sm text-gray-500">Trạng thái hiện tại:</span>
+          <div id="status-text" class="text-lg font-bold text-gray-400 mt-1">Chưa điểm danh</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 w-full">
+          <button onclick="App.submitAttendance('Có mặt', this)" class="col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-95 text-xl flex items-center justify-center">
+            <i class="fas fa-hand-paper mr-2"></i> CÓ MẶT
+          </button>
+          <button onclick="App.submitAttendance('Đi trễ', this)" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-xl shadow transition-all active:scale-95">ĐI TRỄ</button>
+          <button onclick="App.submitAttendance('Vắng phép', this)" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 rounded-xl shadow transition-all active:scale-95">VẮNG PHÉP</button>
+          <button onclick="App.submitAttendance('Vắng KP', this)" class="col-span-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl shadow transition-all active:scale-95">VẮNG KHÔNG PHÉP</button>
+        </div>
+      </div>
+
+    </div>
   </main>
 
   <!-- Toast Notification Container -->
-  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
+  <div id="toast-container" class="fixed top-0 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 mt-4 w-11/12 max-w-sm pointer-events-none"></div>
 
   <!-- Bắt đầu Script -->
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
     // ==========================================
-    // TODO: THAY ĐỔI URL DƯỚI ĐÂY SAU KHI DEPLOY GAS WEB APP
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMlIUK1KLzZchh-lCGpFECrrbz7kmcUSi7HWlQASXaKZNY9PRnfIXfw76EvsQmp-I/exec"; 
     
     // ==========================================
@@ -111,40 +137,45 @@
       showToast: (message, type = 'success') => {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
-        const colors = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-blue-500');
+        const colors = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-gray-800');
         const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
         
-        toast.className = `toast-enter ${colors} text-white px-4 py-3 rounded shadow-lg flex items-center space-x-2`;
-        toast.innerHTML = `<i class="fas ${icon}"></i> <span class="font-medium">${message}</span>`;
+        toast.className = `toast-enter ${colors} text-white px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3`;
+        toast.innerHTML = `<i class="fas ${icon} text-xl"></i> <span class="font-bold text-base flex-1 text-center">${message}</span>`;
         container.appendChild(toast);
         
         setTimeout(() => {
           toast.style.opacity = '0';
           toast.style.transition = 'opacity 0.3s ease';
           setTimeout(() => toast.remove(), 300);
-        }, 2000); // 2 giây thì tắt cho nhanh
+        }, 3000); 
       },
 
       escapeHtml: (unsafe) => {
-        return (unsafe || "").toString()
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+        return (unsafe || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      },
+
+      setLoadingState: (isLoading) => {
+        const overlay = document.getElementById('loading-overlay');
+        const form = document.getElementById('self-service-form');
+        
+        if (isLoading) {
+          overlay.classList.remove('hidden');
+          form.classList.add('hidden');
+        } else {
+          overlay.classList.add('hidden');
+          form.classList.remove('hidden');
+        }
       },
 
       getCurrentMaCuocHop: () => {
         const dateRaw = document.getElementById('inp-date').value;
         const loai = document.getElementById('inp-loai').value;
-        
-        // Chuyển dateRaw (YYYY-MM-DD) thành DD/MM/YYYY
         let dateFormatted = "Chưa rõ ngày";
         if (dateRaw) {
           const parts = dateRaw.split('-');
           if (parts.length === 3) dateFormatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
-        
         return `${dateFormatted} - ${loai}`;
       },
 
@@ -153,13 +184,8 @@
       // ----------------------------------------
       fetchAPI: async (action, method = 'GET', data = null) => {
         try {
-          if (WEB_APP_URL.includes('TEST_APP_ID')) {
-             throw new Error("Vui lòng cập nhật WEB_APP_URL trong index.html");
-          }
-          
           let url = `${WEB_APP_URL}?action=${action}`;
           let options = {};
-          
           if (method === 'POST') {
             options = {
               method: 'POST',
@@ -167,135 +193,150 @@
               body: JSON.stringify({ action, ...data })
             };
           }
-          
           const response = await fetch(url, options);
           const result = await response.json();
           if (!result.success) throw new Error(result.message);
           return result.data || result;
         } catch (error) {
           console.error("API Error:", error);
-          App.showToast(error.message, 'error');
           throw error;
         }
       },
 
       // ----------------------------------------
-      // Business Logic
+      // Business Logic & Events
       // ----------------------------------------
       init: async () => {
-        // Set ngày mặc định là hôm nay
         const today = new Date();
         document.getElementById('inp-date').value = today.toISOString().split('T')[0];
         
+        App.setLoadingState(true);
         try {
-          // Lấy danh sách giáo viên
+          // Lấy danh sách GV
           App.state.giaoVien = await App.fetchAPI('getGiaoVien');
           App.state.toChuyenMon = new Set(App.state.giaoVien.map(gv => gv.toChuyenMon).filter(Boolean));
           
-          // Render filter Tổ chuyên môn
-          const filterTo = document.getElementById('inp-filter-to');
-          let opts = `<option value="ALL">Tất cả tổ</option>`;
+          // Đổ dữ liệu vào Dropdown Tổ
+          const selTo = document.getElementById('inp-filter-to');
+          let opts = `<option value="" disabled selected>-- Chọn Tổ của bạn --</option>`;
           Array.from(App.state.toChuyenMon).sort().forEach(to => {
             opts += `<option value="${App.escapeHtml(to)}">${App.escapeHtml(to)}</option>`;
           });
-          filterTo.innerHTML = opts;
+          selTo.innerHTML = opts;
 
-          // Load trạng thái điểm danh hiện tại
-          await App.reloadAttendance();
+          // Lấy dữ liệu điểm danh ngày hiện tại
+          await App.loadAttendanceData();
 
         } catch (error) {
-          document.getElementById('list-giaovien').innerHTML = `<div class="text-center text-red-500 py-8 bg-white rounded-lg shadow-sm border border-gray-100"><i class="fas fa-exclamation-circle text-3xl mb-3"></i><p>Lỗi tải dữ liệu. Vui lòng tải lại trang.</p></div>`;
+          App.showToast("Không thể tải dữ liệu. Vui lòng thử lại.", 'error');
+        } finally {
+          App.setLoadingState(false);
+        }
+      },
+
+      loadAttendanceData: async () => {
+        const maCuocHop = App.getCurrentMaCuocHop();
+        try {
+          const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop } });
+          App.state.diemDanh = res.data || {};
+          // Cập nhật lại UI nếu đang có người được chọn
+          App.updateStatusUI();
+        } catch (e) {
+          console.error(e);
         }
       },
 
       reloadAttendance: async () => {
-        const listEl = document.getElementById('list-giaovien');
-        const maCuocHop = App.getCurrentMaCuocHop();
-        
-        // Disable actions tạm thời
-        listEl.style.opacity = '0.5';
-        listEl.style.pointerEvents = 'none';
-        
-        try {
-          const diemDanhMapResult = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop: maCuocHop } });
-          App.state.diemDanh = diemDanhMapResult.data || {};
-          App.renderGiaoVienList();
-        } catch (error) {
-          // Lỗi đã báo ở fetchAPI
-        } finally {
-          listEl.style.opacity = '1';
-          listEl.style.pointerEvents = 'auto';
-        }
+        App.setLoadingState(true);
+        await App.loadAttendanceData();
+        // Reset lựa chọn khi đổi ngày/loại họp
+        document.getElementById('inp-filter-to').value = "";
+        document.getElementById('inp-select-gv').innerHTML = `<option value="" disabled selected>-- Chọn Tên của bạn --</option>`;
+        document.getElementById('inp-select-gv').disabled = true;
+        document.getElementById('inp-select-gv').classList.add('bg-gray-100');
+        document.getElementById('action-area').classList.add('hidden');
+        document.getElementById('action-area').classList.remove('flex');
+        App.setLoadingState(false);
       },
 
-      filterGiaoVien: () => {
-        App.renderGiaoVienList();
-      },
-
-      renderGiaoVienList: () => {
-        const search = document.getElementById('inp-search-gv').value.toLowerCase();
-        const to = document.getElementById('inp-filter-to').value;
-        const listEl = document.getElementById('list-giaovien');
+      onSelectTo: () => {
+        const selectedTo = document.getElementById('inp-filter-to').value;
+        const selGV = document.getElementById('inp-select-gv');
+        const actionArea = document.getElementById('action-area');
         
-        let filtered = App.state.giaoVien.filter(gv => {
-          const matchSearch = gv.hoTen.toLowerCase().includes(search);
-          const matchTo = to === 'ALL' || gv.toChuyenMon === to;
-          return matchSearch && matchTo;
-        });
+        // Ẩn khu vực bấm nút
+        actionArea.classList.add('hidden');
+        actionArea.classList.remove('flex');
 
-        if (filtered.length === 0) {
-          listEl.innerHTML = `<div class="text-center text-gray-500 py-8 bg-white rounded-lg shadow-sm border border-gray-100">Không tìm thấy giáo viên.</div>`;
+        if (!selectedTo) {
+          selGV.disabled = true;
+          selGV.classList.add('bg-gray-100');
+          selGV.innerHTML = `<option value="" disabled selected>-- Chọn Tên của bạn --</option>`;
           return;
         }
 
-        let html = '';
-        filtered.forEach(gv => {
-          const dd = App.state.diemDanh[gv.maGV] || {};
-          const status = dd.trangThai || '';
-          
-          const btnActive = "bg-blue-600 text-white font-medium border-blue-600 shadow-inner";
-          const btnInactive = "bg-white text-gray-600 font-medium border-gray-300 hover:bg-blue-50 active:bg-blue-100";
-          
-          html += `
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition duration-200" data-magv="${App.escapeHtml(gv.maGV)}">
-              <div class="flex justify-between items-center mb-3">
-                <div>
-                  <h4 class="font-bold text-gray-800 text-lg">${App.escapeHtml(gv.hoTen)}</h4>
-                  <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">${App.escapeHtml(gv.toChuyenMon)}</span>
-                </div>
-                <div class="text-right">
-                  <span class="text-sm transition-all duration-300 ${status ? 'text-green-600 font-bold' : 'text-gray-400'}">
-                    ${status ? '<i class="fas fa-check-circle mr-1 text-lg align-text-bottom"></i>' : ''}${status || 'Chưa ĐD'}
-                  </span>
-                </div>
-              </div>
-              <div class="grid grid-cols-4 gap-2 actions-container mt-4">
-                <button data-action="mark" data-status="Có mặt" class="border py-2 rounded-lg text-sm transition-all duration-200 ${status === 'Có mặt' ? btnActive : btnInactive}">Có mặt</button>
-                <button data-action="mark" data-status="Đi trễ" class="border py-2 rounded-lg text-sm transition-all duration-200 ${status === 'Đi trễ' ? btnActive : btnInactive}">Đi trễ</button>
-                <button data-action="mark" data-status="Vắng phép" class="border py-2 rounded-lg text-sm transition-all duration-200 ${status === 'Vắng phép' ? btnActive : btnInactive}">V phép</button>
-                <button data-action="mark" data-status="Vắng KP" class="border py-2 rounded-lg text-sm transition-all duration-200 ${status === 'Vắng KP' ? btnActive : btnInactive}">Vắng KP</button>
-              </div>
-            </div>
-          `;
+        // Lọc danh sách GV theo Tổ
+        const gvList = App.state.giaoVien.filter(gv => gv.toChuyenMon === selectedTo);
+        
+        // Render vào dropdown
+        let opts = `<option value="" disabled selected>-- Bấm để chọn Tên --</option>`;
+        gvList.forEach(gv => {
+          opts += `<option value="${App.escapeHtml(gv.maGV)}">${App.escapeHtml(gv.hoTen)}</option>`;
         });
-        listEl.innerHTML = html;
+        selGV.innerHTML = opts;
+        
+        // Bật dropdown
+        selGV.disabled = false;
+        selGV.classList.remove('bg-gray-100');
+        selGV.classList.add('bg-white');
       },
 
-      markAttendance: async (maGV, trangThai, buttonEl) => {
+      onSelectGV: () => {
+        const maGV = document.getElementById('inp-select-gv').value;
+        const actionArea = document.getElementById('action-area');
+        
+        if (!maGV) {
+          actionArea.classList.add('hidden');
+          actionArea.classList.remove('flex');
+          return;
+        }
+
+        actionArea.classList.remove('hidden');
+        actionArea.classList.add('flex');
+        App.updateStatusUI();
+      },
+
+      updateStatusUI: () => {
+        const maGV = document.getElementById('inp-select-gv').value;
+        if (!maGV) return;
+
+        const dd = App.state.diemDanh[maGV];
+        const statusText = document.getElementById('status-text');
+        
+        if (dd && dd.trangThai) {
+          let color = "text-green-600";
+          let icon = "fa-check-circle";
+          if (dd.trangThai === "Đi trễ") { color = "text-yellow-600"; icon = "fa-clock"; }
+          if (dd.trangThai.includes("Vắng")) { color = "text-red-600"; icon = "fa-times-circle"; }
+          
+          statusText.innerHTML = `<span class="${color}"><i class="fas ${icon} mr-1"></i>Đã lưu: ${dd.trangThai}</span>`;
+        } else {
+          statusText.innerHTML = `<span class="text-gray-400">Chưa điểm danh</span>`;
+        }
+      },
+
+      submitAttendance: async (trangThai, btnEl) => {
+        const maGV = document.getElementById('inp-select-gv').value;
+        const tenGV = document.getElementById('inp-select-gv').options[document.getElementById('inp-select-gv').selectedIndex].text;
+        if (!maGV) return;
+
         const maCuocHop = App.getCurrentMaCuocHop();
-        const container = buttonEl.closest('.actions-container');
+        const originalHtml = btnEl.innerHTML;
         
-        // Optimistic UI update
-        container.querySelectorAll('button').forEach(b => {
-           b.className = "border py-2 rounded-lg text-sm transition-all duration-200 bg-white text-gray-600 font-medium border-gray-300 hover:bg-blue-50 active:bg-blue-100";
-        });
-        buttonEl.className = "border py-2 rounded-lg text-sm transition-all duration-200 bg-blue-600 text-white font-medium border-blue-600 shadow-inner";
-        
-        // Update text status quickly
-        const card = buttonEl.closest('.bg-white');
-        const statusText = card.querySelector('.text-right span');
-        statusText.className = "text-sm transition-all duration-300 text-green-600 font-bold";
-        statusText.innerHTML = `<i class="fas fa-check-circle mr-1 text-lg align-text-bottom"></i>${trangThai}`;
+        // Loading state trên nút
+        btnEl.innerHTML = `<div class="spinner"></div> ĐANG LƯU...`;
+        btnEl.disabled = true;
+        btnEl.classList.add('opacity-80', 'cursor-not-allowed');
 
         try {
           await App.fetchAPI('saveDiemDanh', 'POST', {
@@ -307,33 +348,28 @@
             }
           });
           
-          // Lưu vào state để rerender (khi search/filter) không bị mất
+          // Cập nhật State
           if (!App.state.diemDanh[maGV]) App.state.diemDanh[maGV] = {};
           App.state.diemDanh[maGV].trangThai = trangThai;
           
-          App.showToast(`Đã lưu: ${trangThai}`);
+          App.updateStatusUI();
+          App.showToast(`Đã lưu ${trangThai.toUpperCase()} cho cô/thầy ${tenGV}!`, 'success');
+          
+          // Reset UI cho người tiếp theo (Optionally)
+          setTimeout(() => {
+            document.getElementById('inp-filter-to').value = "";
+            App.onSelectTo(); // Triggers hide action area and reset GV dropdown
+          }, 2000);
 
         } catch (error) {
-           // Hoàn tác UI nếu lỗi
-           App.renderGiaoVienList();
+          App.showToast("Có lỗi xảy ra, chưa lưu được!", 'error');
+        } finally {
+          btnEl.innerHTML = originalHtml;
+          btnEl.disabled = false;
+          btnEl.classList.remove('opacity-80', 'cursor-not-allowed');
         }
       }
     };
-
-    // ==========================================
-    // EVENT DELEGATION
-    // ==========================================
-    document.getElementById('list-giaovien').addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action="mark"]');
-      if (btn) {
-        const card = btn.closest('[data-magv]');
-        if (card) {
-          const maGV = card.dataset.magv;
-          const status = btn.dataset.status;
-          App.markAttendance(maGV, status, btn);
-        }
-      }
-    });
 
     // INIT
     window.addEventListener('DOMContentLoaded', () => {

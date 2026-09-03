@@ -191,23 +191,39 @@
       // API Calls
       // ----------------------------------------
       fetchAPI: async (action, method = 'GET', data = null) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        
         try {
           let url = `${WEB_APP_URL}?action=${action}`;
-          let options = {};
+          let options = { signal: controller.signal };
           if (method === 'POST') {
             options = {
+              ...options,
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({ action, ...data })
             };
           }
           const response = await fetch(url, options);
+          
+          // Kiểm tra nếu response trả về HTML (Lỗi cấp quyền hoặc sai URL)
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.indexOf("text/html") !== -1) {
+            throw new Error("Lỗi: GAS trả về HTML. Hãy kiểm tra lại quyền Deploy (Bất kỳ ai/Anyone) hoặc URL.");
+          }
+          
           const result = await response.json();
           if (!result.success) throw new Error(result.message);
           return result.data || result;
         } catch (error) {
           console.error("API Error:", error);
+          if (error.name === 'AbortError') {
+             throw new Error("Lỗi mạng: Hết thời gian chờ phản hồi từ máy chủ.");
+          }
           throw error;
+        } finally {
+          clearTimeout(timeoutId);
         }
       },
 
@@ -247,24 +263,39 @@
         try {
           const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop } });
           App.state.diemDanh = res.data || {};
-          // Cập nhật lại UI nếu đang có người được chọn
           App.updateStatusUI();
         } catch (e) {
           console.error(e);
+          App.showToast(e.message || "Không tải được dữ liệu điểm danh", 'error');
         }
       },
 
       reloadAttendance: async () => {
         App.setLoadingState(true);
-        await App.loadAttendanceData();
-        // Reset lựa chọn khi đổi ngày/loại họp
-        document.getElementById('inp-filter-to').value = "";
-        document.getElementById('inp-select-gv').innerHTML = `<option value="" disabled selected>-- Chọn Tên của bạn --</option>`;
-        document.getElementById('inp-select-gv').disabled = true;
-        document.getElementById('inp-select-gv').classList.add('bg-gray-100');
-        document.getElementById('action-area').classList.add('hidden');
-        document.getElementById('action-area').classList.remove('flex');
-        App.setLoadingState(false);
+        try {
+          await App.loadAttendanceData();
+          // Reset lựa chọn
+          const selTo = document.getElementById('inp-filter-to');
+          if (selTo) selTo.value = "";
+          
+          const selGV = document.getElementById('inp-select-gv');
+          if (selGV) {
+            selGV.innerHTML = `<option value="" disabled selected>-- Chọn Tên của bạn --</option>`;
+            selGV.disabled = true;
+            selGV.classList.remove('bg-white');
+            selGV.classList.add('bg-gray-100');
+          }
+          
+          const actionArea = document.getElementById('action-area');
+          if (actionArea) {
+            actionArea.classList.add('hidden');
+            actionArea.classList.remove('flex');
+          }
+        } catch (e) {
+          console.error("Lỗi trong reloadAttendance:", e);
+        } finally {
+          App.setLoadingState(false);
+        }
       },
 
       onSelectTo: () => {

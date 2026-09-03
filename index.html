@@ -31,20 +31,23 @@
 <body class="text-gray-800 font-sans min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="bg-blue-600 text-white shadow-md">
+  <header class="bg-blue-600 text-white shadow-md relative">
     <div class="container mx-auto px-4 py-4 flex items-center justify-center">
       <div class="flex items-center space-x-2">
         <i class="fas fa-check-double text-2xl"></i>
         <h1 class="text-xl font-bold uppercase tracking-wider">Hệ Thống Điểm Danh</h1>
       </div>
     </div>
+    <button onclick="App.promptAdmin()" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-blue-200 hover:text-white transition-colors">
+      <i class="fas fa-cog text-xl"></i>
+    </button>
   </header>
 
   <!-- Main Container -->
   <main class="container mx-auto px-4 mt-6 max-w-lg flex-1 flex flex-col" id="app-container">
     
     <!-- Intro / Description -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100 p-4 mb-4 text-center">
+    <div id="intro-box" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100 p-4 mb-4 text-center">
       <p class="text-sm text-gray-700 leading-relaxed">
         <strong class="text-blue-700 text-base">Hệ thống Điểm danh dành cho Giáo viên Trường THCS Vĩnh Tân</strong><br>
         Giải pháp công nghệ số hỗ trợ nhà trường tự động hóa quy trình quản lý sĩ số. Giúp giáo viên cập nhật tình trạng vắng/trễ nhanh chóng, chính xác và theo dõi dữ liệu điểm danh vô cùng thuận tiện chỉ với một chạm.
@@ -160,6 +163,61 @@
         <!-- Render from JS -->
       </div>
     </div>
+    
+    <!-- Giao diện Admin / Dashboard -->
+    <div id="view-dashboard" class="hidden bg-white rounded-xl shadow-lg border border-blue-200 p-5 mb-8 flex-1 flex-col animate-fade-in">
+      <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <h2 class="text-xl font-bold text-blue-800"><i class="fas fa-chart-pie mr-2"></i>Thống Kê Sĩ Số</h2>
+        <button onclick="App.toggleView(false)" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-bold transition-colors shadow-sm">
+          <i class="fas fa-arrow-left mr-1"></i> Trở về
+        </button>
+      </div>
+
+      <!-- Thống kê nhanh -->
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 text-center">
+          <div class="text-xs text-blue-600 font-bold uppercase mb-1">Tổng Số GV</div>
+          <div id="dash-total" class="text-3xl font-black text-blue-800">0</div>
+        </div>
+        <div class="bg-green-50 rounded-xl p-4 border border-green-100 text-center shadow-inner">
+          <div class="text-xs text-green-600 font-bold uppercase mb-1">Đã Điểm Danh</div>
+          <div id="dash-present" class="text-3xl font-black text-green-700">0</div>
+        </div>
+        <div class="bg-red-50 rounded-xl p-4 border border-red-100 text-center">
+          <div class="text-xs text-red-600 font-bold uppercase mb-1">Vắng / Trễ</div>
+          <div id="dash-absent" class="text-3xl font-black text-red-700">0</div>
+        </div>
+        <div class="bg-orange-50 rounded-xl p-4 border border-orange-200 text-center relative overflow-hidden shadow-sm">
+          <div class="absolute inset-0 bg-orange-100 animate-pulse opacity-50"></div>
+          <div class="relative z-10">
+            <div class="text-xs text-orange-700 font-bold uppercase mb-1">Chưa thao tác</div>
+            <div id="dash-missing" class="text-3xl font-black text-orange-800">0</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Progress Bar -->
+      <div class="mb-6">
+        <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+          <span>Tiến độ hoàn thành</span>
+          <span id="dash-percent">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3">
+          <div id="dash-progress" class="bg-blue-500 h-3 rounded-full transition-all duration-1000" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Danh sách chi tiết -->
+      <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg"><i class="fas fa-exclamation-circle text-orange-500 mr-2"></i> Danh sách Chưa thao tác</h3>
+      <div id="dash-missing-list" class="space-y-2 mb-6 max-h-48 overflow-y-auto">
+        <!-- Render from JS -->
+      </div>
+      
+      <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg"><i class="fas fa-clipboard-list text-red-500 mr-2"></i> Danh sách Vắng / Trễ</h3>
+      <div id="dash-late-list" class="space-y-2 max-h-48 overflow-y-auto">
+        <!-- Render from JS -->
+      </div>
+    </div>
   </main>
 
   <!-- Toast Notification Container -->
@@ -213,13 +271,21 @@
       setLoadingState: (isLoading) => {
         const overlay = document.getElementById('loading-overlay');
         const form = document.getElementById('self-service-form');
+        const dashboard = document.getElementById('view-dashboard');
         
         if (isLoading) {
           overlay.classList.remove('hidden');
-          form.classList.add('hidden');
+          if(form) form.classList.add('hidden');
+          if(dashboard) dashboard.classList.add('hidden');
         } else {
           overlay.classList.add('hidden');
-          form.classList.remove('hidden');
+          // Chuyển quyền quyết định hiển thị cho toggleView
+          const isDash = dashboard && dashboard.classList.contains('flex');
+          if (isDash) {
+            dashboard.classList.remove('hidden');
+          } else if (form) {
+            form.classList.remove('hidden');
+          }
         }
       },
 
@@ -282,6 +348,95 @@
       // ----------------------------------------
       // Business Logic & Events
       // ----------------------------------------
+      promptAdmin: () => {
+        const pass = prompt("Vui lòng nhập mật khẩu Quản trị viên:");
+        if (pass === "admin123") {
+           App.toggleView(true);
+        } else if (pass !== null) {
+           alert("Mật khẩu không chính xác!");
+        }
+      },
+      
+      toggleView: (isAdmin) => {
+        const form = document.getElementById('self-service-form');
+        const history = document.getElementById('history-container');
+        const dashboard = document.getElementById('view-dashboard');
+        const intro = document.getElementById('intro-box');
+        
+        if (isAdmin) {
+          if (form) form.classList.add('hidden');
+          if (history) history.classList.add('hidden');
+          if (intro) intro.classList.add('hidden');
+          if (dashboard) {
+            dashboard.classList.remove('hidden');
+            dashboard.classList.add('flex');
+          }
+          App.renderDashboard();
+        } else {
+          if (form) form.classList.remove('hidden');
+          if (intro) intro.classList.remove('hidden');
+          if (dashboard) {
+            dashboard.classList.add('hidden');
+            dashboard.classList.remove('flex');
+          }
+          App.reloadAttendance(); 
+        }
+      },
+
+      renderDashboard: () => {
+        const allTeachers = App.state.giaoVien || [];
+        const attendanceMap = App.state.diemDanh || {}; 
+        
+        let presentCount = 0;
+        let absentLateCount = 0;
+        let missingList = [];
+        let absentLateList = [];
+        
+        allTeachers.forEach(gv => {
+           const id = gv.maGV || gv.hoTen;
+           const ten = gv.hoTen || "Không rõ";
+           const to = gv.toChuyenMon || "Không rõ";
+           
+           if (attendanceMap[id]) {
+              const tt = attendanceMap[id].trangThai;
+              if (tt === "Có mặt") {
+                 presentCount++;
+              } else {
+                 absentLateCount++;
+                 absentLateList.push({ten, to, tt, ghiChu: attendanceMap[id].ghiChu});
+              }
+           } else {
+              missingList.push({ten, to});
+           }
+        });
+        
+        const total = allTeachers.length;
+        const missingCount = missingList.length;
+        const checkedInCount = presentCount + absentLateCount;
+        const percent = total > 0 ? Math.round((checkedInCount / total) * 100) : 0;
+        
+        document.getElementById('dash-total').innerText = total;
+        document.getElementById('dash-present').innerText = presentCount;
+        document.getElementById('dash-absent').innerText = absentLateCount;
+        document.getElementById('dash-missing').innerText = missingCount;
+        
+        document.getElementById('dash-percent').innerText = `${percent}%`;
+        document.getElementById('dash-progress').style.width = `${percent}%`;
+        
+        const renderList = (arr, isMissing) => {
+           if (arr.length === 0) return `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu.</div>`;
+           return arr.map(item => `
+             <div class="flex justify-between items-center p-2 border-b border-gray-100 last:border-0 text-sm">
+               <div><span class="font-bold text-gray-700">${App.escapeHtml(item.ten)}</span> <span class="text-xs text-gray-400">(${App.escapeHtml(item.to)})</span></div>
+               ${!isMissing ? `<span class="px-2 py-0.5 rounded text-xs font-bold ${item.tt === 'Đi trễ' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">${App.escapeHtml(item.tt)} ${item.ghiChu ? '- ' + App.escapeHtml(item.ghiChu) : ''}</span>` : ''}
+             </div>
+           `).join('');
+        };
+        
+        document.getElementById('dash-missing-list').innerHTML = renderList(missingList, true);
+        document.getElementById('dash-late-list').innerHTML = renderList(absentLateList, false);
+      },
+
       init: async () => {
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
@@ -375,6 +530,13 @@
         App.setLoadingState(true);
         try {
           await App.loadAttendanceData();
+          
+          const dashboard = document.getElementById('view-dashboard');
+          if (dashboard && dashboard.classList.contains('flex')) {
+             App.renderDashboard();
+             return; 
+          }
+          
           // Reset lựa chọn
           const selTo = document.getElementById('inp-filter-to');
           if (selTo) selTo.value = "";

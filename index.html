@@ -61,13 +61,16 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Loại họp</label>
-          <select id="inp-loai" onchange="App.reloadAttendance()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-gray-50">
+          <select id="inp-loai" onchange="App.onChangeLoai()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-gray-50">
             <option value="Họp chi bộ">Họp chi bộ</option>
             <option value="Họp hội đồng">Họp hội đồng</option>
             <option value="Họp tổ">Họp tổ</option>
             <option value="Họp trung tâm">Họp trung tâm</option>
             <option value="Họp khác">Họp khác</option>
           </select>
+          <div id="inp-loai-khac-container" class="hidden mt-3 animate-fade-in">
+            <input type="text" id="inp-loai-khac" onblur="App.reloadAttendance()" placeholder="Nhập tên cuộc họp..." class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 font-medium text-blue-800 placeholder-blue-300">
+          </div>
         </div>
       </div>
     </div>
@@ -108,31 +111,37 @@
         </div>
 
         <label class="block text-sm font-semibold text-gray-700 mb-3"><i class="fas fa-check-square text-blue-500 mr-1"></i>3. Chọn trạng thái điểm danh mới</label>
-        <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="grid grid-cols-2 gap-3 mb-4">
           <label class="cursor-pointer">
-            <input type="radio" name="status" value="Có mặt" class="peer sr-only" checked>
+            <input type="radio" name="status" value="Có mặt" onchange="App.onChangeStatus()" class="peer sr-only" checked>
             <div class="rounded-xl border-2 border-gray-200 bg-white p-3 text-center transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 font-bold shadow-sm">
               CÓ MẶT
             </div>
           </label>
           <label class="cursor-pointer">
-            <input type="radio" name="status" value="Đi trễ" class="peer sr-only">
+            <input type="radio" name="status" value="Đi trễ" onchange="App.onChangeStatus()" class="peer sr-only">
             <div class="rounded-xl border-2 border-gray-200 bg-white p-3 text-center transition-all peer-checked:border-yellow-500 peer-checked:bg-yellow-50 peer-checked:text-yellow-700 font-bold shadow-sm">
               ĐI TRỄ
             </div>
           </label>
           <label class="cursor-pointer">
-            <input type="radio" name="status" value="Vắng phép" class="peer sr-only">
+            <input type="radio" name="status" value="Vắng phép" onchange="App.onChangeStatus()" class="peer sr-only">
             <div class="rounded-xl border-2 border-gray-200 bg-white p-3 text-center transition-all peer-checked:border-gray-500 peer-checked:bg-gray-100 peer-checked:text-gray-700 font-bold shadow-sm">
               VẮNG PHÉP
             </div>
           </label>
           <label class="cursor-pointer">
-            <input type="radio" name="status" value="Vắng KP" class="peer sr-only">
+            <input type="radio" name="status" value="Vắng KP" onchange="App.onChangeStatus()" class="peer sr-only">
             <div class="rounded-xl border-2 border-gray-200 bg-white p-3 text-center transition-all peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 font-bold shadow-sm">
               VẮNG KP
             </div>
           </label>
+        </div>
+        
+        <!-- Khung nhập số phút trễ -->
+        <div id="inp-tre-container" class="hidden mb-6 bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-inner animate-fade-in">
+           <label class="block text-sm font-semibold text-yellow-800 mb-2">Trễ bao nhiêu phút?</label>
+           <input type="number" id="inp-phut-tre" min="1" placeholder="Ví dụ: 15" class="w-full border border-yellow-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500 outline-none font-medium text-yellow-900">
         </div>
 
         <button id="btn-submit" onclick="App.submitAttendance(this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg flex items-center justify-center">
@@ -216,7 +225,12 @@
 
       getCurrentMaCuocHop: () => {
         const dateRaw = document.getElementById('inp-date').value;
-        const loai = document.getElementById('inp-loai').value;
+        let loai = document.getElementById('inp-loai').value;
+        if (loai === "Họp khác") {
+           const khacVal = document.getElementById('inp-loai-khac').value.trim();
+           if (khacVal) loai = khacVal;
+        }
+        
         let dateFormatted = "Chưa rõ ngày";
         if (dateRaw) {
           const parts = dateRaw.split('-');
@@ -386,6 +400,27 @@
         }
       },
 
+      onChangeLoai: () => {
+        const loai = document.getElementById('inp-loai').value;
+        const khacContainer = document.getElementById('inp-loai-khac-container');
+        if (loai === "Họp khác") {
+           khacContainer.classList.remove('hidden');
+        } else {
+           khacContainer.classList.add('hidden');
+        }
+        App.reloadAttendance();
+      },
+      
+      onChangeStatus: () => {
+        const selectedRadio = document.querySelector('input[name="status"]:checked');
+        const treContainer = document.getElementById('inp-tre-container');
+        if (selectedRadio && selectedRadio.value === "Đi trễ") {
+           treContainer.classList.remove('hidden');
+        } else {
+           treContainer.classList.add('hidden');
+        }
+      },
+
       onSelectTo: () => {
         const selectedTo = document.getElementById('inp-filter-to').value;
         const selGV = document.getElementById('inp-select-gv');
@@ -466,6 +501,11 @@
            return;
         }
         const trangThai = selectedRadio.value;
+        let ghiChu = "";
+        if (trangThai === "Đi trễ") {
+           const phut = document.getElementById('inp-phut-tre').value.trim();
+           if (phut) ghiChu = `Trễ ${phut} phút`;
+        }
 
         const maCuocHop = App.getCurrentMaCuocHop();
         const originalHtml = btnEl.innerHTML;
@@ -483,7 +523,7 @@
               hoTen: tenGV,
               toChuyenMon: selectedTo,
               trangThai: trangThai,
-              ghiChu: ""
+              ghiChu: ghiChu
             }
           });
           

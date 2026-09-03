@@ -151,6 +151,12 @@
            <label class="block text-sm font-semibold text-yellow-800 mb-2">Trễ bao nhiêu phút?</label>
            <input type="number" id="inp-phut-tre" min="1" placeholder="Ví dụ: 15" class="w-full border border-yellow-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500 outline-none font-medium text-yellow-900">
         </div>
+        
+        <!-- Khung nhập lý do vắng -->
+        <div id="inp-vang-container" class="hidden mb-6 bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-inner animate-fade-in">
+           <label class="block text-sm font-semibold text-gray-700 mb-2">Lý do vắng (Tùy chọn):</label>
+           <input type="text" id="inp-ly-do-vang" placeholder="Ví dụ: Bệnh, Đi công tác..." class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-gray-400 outline-none font-medium text-gray-800">
+        </div>
 
         <button id="btn-submit" onclick="App.submitAttendance(this)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 text-lg flex items-center justify-center">
           <i class="fas fa-paper-plane mr-2"></i> GỬI ĐIỂM DANH
@@ -621,10 +627,19 @@
       onChangeStatus: () => {
         const selectedRadio = document.querySelector('input[name="status"]:checked');
         const treContainer = document.getElementById('inp-tre-container');
-        if (selectedRadio && selectedRadio.value === "Đi trễ") {
-           treContainer.classList.remove('hidden');
-        } else {
-           treContainer.classList.add('hidden');
+        const vangContainer = document.getElementById('inp-vang-container');
+        
+        if (selectedRadio) {
+           if (selectedRadio.value === "Đi trễ") {
+              treContainer.classList.remove('hidden');
+              vangContainer.classList.add('hidden');
+           } else if (selectedRadio.value === "Vắng phép") {
+              treContainer.classList.add('hidden');
+              vangContainer.classList.remove('hidden');
+           } else {
+              treContainer.classList.add('hidden');
+              vangContainer.classList.add('hidden');
+           }
         }
       },
 
@@ -712,6 +727,9 @@
         if (trangThai === "Đi trễ") {
            const phut = document.getElementById('inp-phut-tre').value.trim();
            if (phut) ghiChu = `Trễ ${phut} phút`;
+        } else if (trangThai === "Vắng phép") {
+           const ldv = document.getElementById('inp-ly-do-vang').value.trim();
+           if (ldv) ghiChu = ldv;
         }
 
         const maCuocHop = App.getCurrentMaCuocHop();
@@ -750,6 +768,15 @@
             if(selTo) {
               selTo.value = "";
               App.onSelectTo();
+            }
+            
+            // Xóa form phụ và reset trạng thái về Có mặt
+            document.getElementById('inp-phut-tre').value = "";
+            document.getElementById('inp-ly-do-vang').value = "";
+            const radioCoMat = document.querySelector('input[value="Có mặt"]');
+            if (radioCoMat) {
+               radioCoMat.checked = true;
+               App.onChangeStatus();
             }
           }, 2000);
 

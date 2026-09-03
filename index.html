@@ -255,7 +255,10 @@
       // ----------------------------------------
       init: async () => {
         const today = new Date();
-        document.getElementById('inp-date').value = today.toISOString().split('T')[0];
+        const todayStr = today.toISOString().split('T')[0];
+        const dateInp = document.getElementById('inp-date');
+        dateInp.value = todayStr;
+        dateInp.max = todayStr; // Ngăn chọn ngày trong tương lai
         
         App.setLoadingState(true);
         try {

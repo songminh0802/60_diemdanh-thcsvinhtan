@@ -31,17 +31,22 @@
 <body class="text-gray-800 font-sans min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="bg-blue-600 text-white shadow-md relative">
+  <header class="bg-blue-600 text-white shadow-md">
     <div class="container mx-auto px-4 py-4 flex items-center justify-center">
       <div class="flex items-center space-x-2">
         <i class="fas fa-check-double text-2xl"></i>
         <h1 class="text-xl font-bold uppercase tracking-wider">Hệ Thống Điểm Danh</h1>
       </div>
     </div>
-    <button onclick="App.promptAdmin()" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-blue-200 hover:text-white transition-colors">
-      <i class="fas fa-cog text-xl"></i>
-    </button>
   </header>
+
+  <!-- Tab Navigation -->
+  <div class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <div class="container mx-auto max-w-lg flex">
+      <button onclick="App.toggleView(false)" id="tab-btn-form" class="flex-1 py-3 font-bold text-blue-600 border-b-2 border-blue-600 text-sm uppercase transition-colors">Tự Điểm Danh</button>
+      <button onclick="App.promptAdmin()" id="tab-btn-dash" class="flex-1 py-3 font-bold text-gray-400 border-b-2 border-transparent hover:text-blue-500 text-sm uppercase transition-colors">Quản Trị (BGH)</button>
+    </div>
+  </div>
 
   <!-- Main Container -->
   <main class="container mx-auto px-4 mt-6 max-w-lg flex-1 flex flex-col" id="app-container">
@@ -166,32 +171,36 @@
     
     <!-- Giao diện Admin / Dashboard -->
     <div id="view-dashboard" class="hidden bg-white rounded-xl shadow-lg border border-blue-200 p-5 mb-8 flex-1 flex-col animate-fade-in">
-      <div class="flex justify-between items-center mb-6 border-b pb-4">
-        <h2 class="text-xl font-bold text-blue-800"><i class="fas fa-chart-pie mr-2"></i>Thống Kê Sĩ Số</h2>
-        <button onclick="App.toggleView(false)" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-bold transition-colors shadow-sm">
-          <i class="fas fa-arrow-left mr-1"></i> Trở về
-        </button>
+      <div class="flex items-center justify-center mb-4 border-b pb-3">
+        <h2 class="text-lg font-bold text-blue-800 uppercase tracking-wider"><i class="fas fa-chart-pie mr-2"></i>Thống Kê Sĩ Số</h2>
       </div>
 
-      <!-- Thống kê nhanh -->
-      <div class="grid grid-cols-2 gap-4 mb-6">
-        <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 text-center">
-          <div class="text-xs text-blue-600 font-bold uppercase mb-1">Tổng Số GV</div>
-          <div id="dash-total" class="text-3xl font-black text-blue-800">0</div>
+      <!-- Thống kê theo Tổ chuyên môn -->
+      <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 mb-6">
+        <div class="flex justify-between items-end mb-3 border-b border-gray-200 pb-2">
+           <span class="text-xs font-bold text-gray-500 uppercase">Tổng số Giáo viên</span>
+           <span id="dash-total" class="text-2xl font-black text-blue-700 leading-none">0</span>
         </div>
-        <div class="bg-green-50 rounded-xl p-4 border border-green-100 text-center shadow-inner">
-          <div class="text-xs text-green-600 font-bold uppercase mb-1">Đã Điểm Danh</div>
-          <div id="dash-present" class="text-3xl font-black text-green-700">0</div>
+        <div id="dash-to-list" class="grid grid-cols-2 gap-2 text-sm">
+           <!-- Render from JS -->
         </div>
-        <div class="bg-red-50 rounded-xl p-4 border border-red-100 text-center">
-          <div class="text-xs text-red-600 font-bold uppercase mb-1">Vắng / Trễ</div>
-          <div id="dash-absent" class="text-3xl font-black text-red-700">0</div>
+      </div>
+
+      <!-- Thống kê nhanh Trạng thái -->
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="bg-green-50 rounded-xl p-3 border border-green-100 text-center shadow-inner">
+          <div class="text-[10px] text-green-600 font-bold uppercase mb-1">Đã Điểm Danh</div>
+          <div id="dash-present" class="text-2xl font-black text-green-700">0</div>
         </div>
-        <div class="bg-orange-50 rounded-xl p-4 border border-orange-200 text-center relative overflow-hidden shadow-sm">
+        <div class="bg-red-50 rounded-xl p-3 border border-red-100 text-center shadow-inner">
+          <div class="text-[10px] text-red-600 font-bold uppercase mb-1">Vắng / Trễ</div>
+          <div id="dash-absent" class="text-2xl font-black text-red-700">0</div>
+        </div>
+        <div class="bg-orange-50 rounded-xl p-3 border border-orange-200 text-center relative overflow-hidden shadow-inner flex flex-col justify-center">
           <div class="absolute inset-0 bg-orange-100 animate-pulse opacity-50"></div>
           <div class="relative z-10">
-            <div class="text-xs text-orange-700 font-bold uppercase mb-1">Chưa thao tác</div>
-            <div id="dash-missing" class="text-3xl font-black text-orange-800">0</div>
+            <div class="text-[10px] text-orange-700 font-bold uppercase mb-1 leading-tight">Chưa Thao Tác</div>
+            <div id="dash-missing" class="text-2xl font-black text-orange-800">0</div>
           </div>
         </div>
       </div>
@@ -362,6 +371,8 @@
         const history = document.getElementById('history-container');
         const dashboard = document.getElementById('view-dashboard');
         const intro = document.getElementById('intro-box');
+        const tabForm = document.getElementById('tab-btn-form');
+        const tabDash = document.getElementById('tab-btn-dash');
         
         if (isAdmin) {
           if (form) form.classList.add('hidden');
@@ -371,6 +382,14 @@
             dashboard.classList.remove('hidden');
             dashboard.classList.add('flex');
           }
+          if (tabForm) {
+             tabForm.classList.remove('text-blue-600', 'border-blue-600');
+             tabForm.classList.add('text-gray-400', 'border-transparent');
+          }
+          if (tabDash) {
+             tabDash.classList.add('text-blue-600', 'border-blue-600');
+             tabDash.classList.remove('text-gray-400', 'border-transparent');
+          }
           App.renderDashboard();
         } else {
           if (form) form.classList.remove('hidden');
@@ -378,6 +397,14 @@
           if (dashboard) {
             dashboard.classList.add('hidden');
             dashboard.classList.remove('flex');
+          }
+          if (tabForm) {
+             tabForm.classList.add('text-blue-600', 'border-blue-600');
+             tabForm.classList.remove('text-gray-400', 'border-transparent');
+          }
+          if (tabDash) {
+             tabDash.classList.remove('text-blue-600', 'border-blue-600');
+             tabDash.classList.add('text-gray-400', 'border-transparent');
           }
           App.reloadAttendance(); 
         }
@@ -391,11 +418,15 @@
         let absentLateCount = 0;
         let missingList = [];
         let absentLateList = [];
+        let toCountMap = {}; 
         
         allTeachers.forEach(gv => {
            const id = gv.maGV || gv.hoTen;
            const ten = gv.hoTen || "Không rõ";
            const to = gv.toChuyenMon || "Không rõ";
+           
+           if (!toCountMap[to]) toCountMap[to] = 0;
+           toCountMap[to]++;
            
            if (attendanceMap[id]) {
               const tt = attendanceMap[id].trangThai;
@@ -422,6 +453,20 @@
         
         document.getElementById('dash-percent').innerText = `${percent}%`;
         document.getElementById('dash-progress').style.width = `${percent}%`;
+        
+        const toListEl = document.getElementById('dash-to-list');
+        if (toListEl) {
+           let toHtml = '';
+           Object.keys(toCountMap).sort().forEach(to => {
+              toHtml += `
+                <div class="flex justify-between items-center bg-white border border-gray-100 p-2 rounded-lg shadow-sm">
+                   <span class="font-bold text-gray-600 truncate mr-2">${App.escapeHtml(to)}</span>
+                   <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-black text-xs">${toCountMap[to]}</span>
+                </div>
+              `;
+           });
+           toListEl.innerHTML = toHtml;
+        }
         
         const renderList = (arr, isMissing) => {
            if (arr.length === 0) return `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu.</div>`;

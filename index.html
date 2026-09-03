@@ -100,8 +100,8 @@
         </div>
       </div>
 
-      <!-- Khu vực hành động (Sẽ hiện ra khi chọn Tên) -->
-      <div id="action-area" class="hidden flex-col items-stretch bg-gray-50 rounded-xl border border-gray-200 mt-auto p-5">
+      <!-- Khu vực hành động (Luôn hiển thị nhưng làm mờ cho đến khi chọn Tên) -->
+      <div id="action-area" class="flex flex-col items-stretch bg-gray-50 rounded-xl border border-gray-200 mt-auto p-5 opacity-40 pointer-events-none transition-opacity duration-300">
         <div id="status-display" class="mb-5 text-center bg-white rounded-lg p-2 border border-dashed border-gray-300">
           <span class="text-xs text-gray-500 uppercase font-bold tracking-wider">Trạng thái hiện tại trên hệ thống:</span>
           <div id="status-text" class="text-lg font-bold text-gray-400 mt-1">Chưa điểm danh</div>
@@ -315,8 +315,9 @@
           
           const actionArea = document.getElementById('action-area');
           if (actionArea) {
-            actionArea.classList.add('hidden');
-            actionArea.classList.remove('flex');
+            actionArea.classList.add('opacity-40', 'pointer-events-none');
+            // Đảm bảo không còn class hidden
+            actionArea.classList.remove('hidden');
           }
         } catch (e) {
           console.error("Lỗi trong reloadAttendance:", e);
@@ -330,9 +331,10 @@
         const selGV = document.getElementById('inp-select-gv');
         const actionArea = document.getElementById('action-area');
         
-        // Ẩn khu vực bấm nút
-        actionArea.classList.add('hidden');
-        actionArea.classList.remove('flex');
+        // Ẩn/làm mờ khu vực bấm nút
+        if (actionArea) {
+           actionArea.classList.add('opacity-40', 'pointer-events-none');
+        }
 
         if (!selectedTo) {
           selGV.disabled = true;
@@ -362,13 +364,11 @@
         const actionArea = document.getElementById('action-area');
         
         if (!maGV) {
-          actionArea.classList.add('hidden');
-          actionArea.classList.remove('flex');
+          actionArea.classList.add('opacity-40', 'pointer-events-none');
           return;
         }
 
-        actionArea.classList.remove('hidden');
-        actionArea.classList.add('flex');
+        actionArea.classList.remove('opacity-40', 'pointer-events-none');
         App.updateStatusUI();
       },
 

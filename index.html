@@ -141,6 +141,16 @@
       </div>
 
     </div>
+    
+    <!-- Bước 3: Lịch sử mới nhất -->
+    <div id="history-container" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-8">
+      <h2 class="text-lg font-bold text-teal-700 mb-4 flex items-center justify-center border-b border-gray-100 pb-3">
+        <i class="fas fa-list-ul mr-2 text-teal-500"></i> 5 người điểm danh mới nhất
+      </h2>
+      <div id="history-list" class="space-y-3">
+        <!-- Render from JS -->
+      </div>
+    </div>
   </main>
 
   <!-- Toast Notification Container -->
@@ -289,12 +299,58 @@
         const maCuocHop = App.getCurrentMaCuocHop();
         try {
           const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop } });
-          App.state.diemDanh = res.data || {};
+          
+          if (res && res.map !== undefined) {
+             App.state.diemDanh = res.map || {};
+             App.renderHistory(res.history || []);
+          } else {
+             // Tương thích ngược phiên bản cũ (nếu chưa deploy)
+             App.state.diemDanh = res || {};
+             App.renderHistory([]);
+          }
+          
           App.updateStatusUI();
         } catch (e) {
           console.error(e);
           App.showToast(e.message || "Không tải được dữ liệu điểm danh", 'error');
         }
+      },
+
+      renderHistory: (historyArr) => {
+        const container = document.getElementById('history-container');
+        const listEl = document.getElementById('history-list');
+        
+        if (!historyArr || historyArr.length === 0) {
+          container.classList.add('hidden');
+          return;
+        }
+        
+        container.classList.remove('hidden');
+        let html = '';
+        historyArr.forEach(item => {
+           // Lookup tên GV
+           const gv = App.state.giaoVien.find(g => g.maGV == item.maGV || g.hoTen == item.maGV);
+           const ten = gv ? gv.hoTen : (item.maGV || "Không rõ");
+           
+           let badgeClass = "bg-green-100 text-green-700 border-green-200";
+           if (item.trangThai === "Đi trễ") badgeClass = "bg-yellow-100 text-yellow-700 border-yellow-200";
+           if (item.trangThai && item.trangThai.includes("Vắng")) badgeClass = "bg-red-100 text-red-700 border-red-200";
+           
+           html += `
+            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-white transition-colors">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">
+                  <i class="fas fa-user-tie"></i>
+                </div>
+                <span class="font-semibold text-gray-700 text-sm">${App.escapeHtml(ten)}</span>
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeClass}">
+                ${App.escapeHtml(item.trangThai)}
+              </span>
+            </div>
+           `;
+        });
+        listEl.innerHTML = html;
       },
 
       reloadAttendance: async () => {
@@ -430,6 +486,9 @@
           
           App.updateStatusUI();
           App.showToast(`Đã lưu ${trangThai.toUpperCase()} cho cô/thầy ${tenGV}!`, 'success');
+          
+          // Tải lại dữ liệu điểm danh để cập nhật danh sách 5 người mới nhất
+          App.loadAttendanceData();
           
           // Reset UI cho người tiếp theo (Optionally)
           setTimeout(() => {

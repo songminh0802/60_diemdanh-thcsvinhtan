@@ -77,7 +77,7 @@
             <option value="Họp khác">Họp khác</option>
           </select>
           <div id="inp-loai-khac-container" class="hidden mt-3 animate-fade-in">
-            <input type="text" id="inp-loai-khac" onblur="App.reloadAttendance()" placeholder="Nhập tên cuộc họp..." class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 font-medium text-blue-800 placeholder-blue-300">
+            <input type="text" id="inp-loai-khac" onblur="App.reloadAttendance()" placeholder="Nhập tên cuộc họp (Bắt buộc)..." class="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 font-medium text-blue-800 placeholder-blue-400">
           </div>
         </div>
       </div>
@@ -148,13 +148,13 @@
         
         <!-- Khung nhập số phút trễ -->
         <div id="inp-tre-container" class="hidden mb-6 bg-yellow-50 border border-yellow-200 p-4 rounded-xl shadow-inner animate-fade-in">
-           <label class="block text-sm font-semibold text-yellow-800 mb-2">Trễ bao nhiêu phút?</label>
+           <label class="block text-sm font-semibold text-yellow-800 mb-2">Trễ bao nhiêu phút? <span class="text-red-500">*</span></label>
            <input type="number" id="inp-phut-tre" min="1" placeholder="Ví dụ: 15" class="w-full border border-yellow-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500 outline-none font-medium text-yellow-900">
         </div>
         
         <!-- Khung nhập lý do vắng -->
         <div id="inp-vang-container" class="hidden mb-6 bg-gray-50 border border-gray-200 p-4 rounded-xl shadow-inner animate-fade-in">
-           <label class="block text-sm font-semibold text-gray-700 mb-2">Lý do vắng (Tùy chọn):</label>
+           <label class="block text-sm font-semibold text-gray-700 mb-2">Lý do vắng <span class="text-red-500">*</span></label>
            <input type="text" id="inp-ly-do-vang" placeholder="Ví dụ: Bệnh, Đi công tác..." class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-gray-400 outline-none font-medium text-gray-800">
         </div>
 
@@ -724,12 +724,34 @@
         }
         const trangThai = selectedRadio.value;
         let ghiChu = "";
+        
+        // VALIDATE BẮT BUỘC
         if (trangThai === "Đi trễ") {
            const phut = document.getElementById('inp-phut-tre').value.trim();
-           if (phut) ghiChu = `Trễ ${phut} phút`;
+           if (!phut) {
+              App.showToast("Bắt buộc nhập số phút đi trễ!", "error");
+              document.getElementById('inp-phut-tre').focus();
+              return;
+           }
+           ghiChu = `Trễ ${phut} phút`;
         } else if (trangThai === "Vắng phép") {
            const ldv = document.getElementById('inp-ly-do-vang').value.trim();
-           if (ldv) ghiChu = ldv;
+           if (!ldv) {
+              App.showToast("Bắt buộc nhập lý do vắng phép!", "error");
+              document.getElementById('inp-ly-do-vang').focus();
+              return;
+           }
+           ghiChu = ldv;
+        }
+
+        const loaiHop = document.getElementById('inp-loai').value;
+        if (loaiHop === "Họp khác") {
+           const khacVal = document.getElementById('inp-loai-khac').value.trim();
+           if (!khacVal) {
+              App.showToast("Bắt buộc nhập tên cuộc họp khác!", "error");
+              document.getElementById('inp-loai-khac').focus();
+              return;
+           }
         }
 
         const maCuocHop = App.getCurrentMaCuocHop();

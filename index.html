@@ -349,7 +349,10 @@
         // Render vào dropdown
         let opts = `<option value="" disabled selected>-- Bấm để chọn Tên --</option>`;
         gvList.forEach(gv => {
-          opts += `<option value="${App.escapeHtml(gv.maGV)}">${App.escapeHtml(gv.hoTen)}</option>`;
+          const val = gv.maGV ? gv.maGV.toString().trim() : "";
+          const name = gv.hoTen ? gv.hoTen.toString().trim() : "Chưa có tên";
+          const finalVal = val || name; // Nếu cột Mã GV bị trống, dùng luôn Họ Tên
+          opts += `<option value="${App.escapeHtml(finalVal)}">${App.escapeHtml(name)}</option>`;
         });
         selGV.innerHTML = opts;
         

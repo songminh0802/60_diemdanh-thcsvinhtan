@@ -204,22 +204,23 @@
         </div>
       </div>
 
-      <!-- Thống kê nhanh Trạng thái -->
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <div class="bg-green-50 rounded-xl p-3 border border-green-100 text-center shadow-inner">
-          <div class="text-[10px] text-green-600 font-bold uppercase mb-1">Đã Điểm Danh</div>
-          <div id="dash-present" class="text-2xl font-black text-green-700">0</div>
-        </div>
-        <div class="bg-red-50 rounded-xl p-3 border border-red-100 text-center shadow-inner">
-          <div class="text-[10px] text-red-600 font-bold uppercase mb-1">Vắng / Trễ</div>
-          <div id="dash-absent" class="text-2xl font-black text-red-700">0</div>
+      <!-- Thống kê 4 ô -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="bg-blue-50 rounded-xl p-3 border border-blue-200 text-center relative overflow-hidden shadow-inner flex flex-col justify-center">
+          <div class="text-[10px] sm:text-xs font-bold text-blue-700 uppercase mb-1">Đã điểm danh</div>
+          <div class="text-3xl font-black text-blue-600" id="dash-submitted">0</div>
         </div>
         <div class="bg-orange-50 rounded-xl p-3 border border-orange-200 text-center relative overflow-hidden shadow-inner flex flex-col justify-center">
-          <div class="absolute inset-0 bg-orange-100 animate-pulse opacity-50"></div>
-          <div class="relative z-10">
-            <div class="text-[10px] text-orange-700 font-bold uppercase mb-1 leading-tight">Chưa Thao Tác</div>
-            <div id="dash-missing" class="text-2xl font-black text-orange-800">0</div>
-          </div>
+          <div class="text-[10px] sm:text-xs font-bold text-orange-700 uppercase mb-1">Chưa thao tác</div>
+          <div class="text-3xl font-black text-orange-600" id="dash-missing">0</div>
+        </div>
+        <div class="bg-green-50 rounded-xl p-3 border border-green-200 text-center relative overflow-hidden shadow-inner flex flex-col justify-center">
+          <div class="text-[10px] sm:text-xs font-bold text-green-700 uppercase mb-1">Có mặt</div>
+          <div class="text-3xl font-black text-green-600" id="dash-present">0</div>
+        </div>
+        <div class="bg-red-50 rounded-xl p-3 border border-red-200 text-center relative overflow-hidden shadow-inner flex flex-col justify-center">
+          <div class="text-[10px] sm:text-xs font-bold text-red-700 uppercase mb-1">Vắng / Trễ</div>
+          <div class="text-3xl font-black text-red-600" id="dash-absent">0</div>
         </div>
       </div>
       
@@ -474,10 +475,11 @@
         
         const total = allTeachers.length;
         const missingCount = missingList.length;
-        const checkedInCount = presentCount + absentLateCount;
-        const percent = total > 0 ? Math.round((checkedInCount / total) * 100) : 0;
+        const submittedCount = presentCount + absentLateCount;
+        const percent = total > 0 ? Math.round((submittedCount / total) * 100) : 0;
         
         document.getElementById('dash-total').innerText = total;
+        document.getElementById('dash-submitted').innerText = submittedCount;
         document.getElementById('dash-present').innerText = presentCount;
         document.getElementById('dash-absent').innerText = absentLateCount;
         document.getElementById('dash-missing').innerText = missingCount;
@@ -522,12 +524,13 @@
       copyReport: () => {
         const maCuocHop = App.getCurrentMaCuocHop();
         const total = document.getElementById('dash-total').innerText;
+        const submitted = document.getElementById('dash-submitted').innerText;
         const present = document.getElementById('dash-present').innerText;
         
         const rd = App.state.reportData || { missing: [], lateAbsent: [] };
         
         let reportText = `BÁO CÁO SĨ SỐ: ${maCuocHop.toUpperCase()}\n`;
-        reportText += `▶ Tổng GV: ${total} | Điểm danh: ${present}\n`;
+        reportText += `▶ Tổng GV: ${total} | Đã Đ.Danh: ${submitted} | Có mặt: ${present}\n`;
         
         if (rd.lateAbsent.length > 0) {
            reportText += `\n🔴 VẮNG / TRỄ (${rd.lateAbsent.length}):\n`;

@@ -223,6 +223,13 @@
         </div>
       </div>
       
+      <!-- Nút Copy Báo cáo -->
+      <div class="mb-6">
+        <button onclick="App.copyReport()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center">
+          <i class="far fa-copy mr-2 text-lg"></i> COPY BÁO CÁO CHUYỂN ZALO
+        </button>
+      </div>
+
       <!-- Progress Bar -->
       <div class="mb-6">
         <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
@@ -475,6 +482,12 @@
         document.getElementById('dash-absent').innerText = absentLateCount;
         document.getElementById('dash-missing').innerText = missingCount;
         
+        // Lưu tạm vào state để dùng cho tính năng Copy Báo Cáo
+        App.state.reportData = {
+           missing: missingList,
+           lateAbsent: absentLateList
+        };
+        
         document.getElementById('dash-percent').innerText = `${percent}%`;
         document.getElementById('dash-progress').style.width = `${percent}%`;
         
@@ -504,6 +517,38 @@
         
         document.getElementById('dash-missing-list').innerHTML = renderList(missingList, true);
         document.getElementById('dash-late-list').innerHTML = renderList(absentLateList, false);
+      },
+
+      copyReport: () => {
+        const maCuocHop = App.getCurrentMaCuocHop();
+        const total = document.getElementById('dash-total').innerText;
+        const present = document.getElementById('dash-present').innerText;
+        
+        const rd = App.state.reportData || { missing: [], lateAbsent: [] };
+        
+        let reportText = `BÁO CÁO SĨ SỐ: ${maCuocHop.toUpperCase()}\n`;
+        reportText += `▶ Tổng GV: ${total} | Điểm danh: ${present}\n`;
+        
+        if (rd.lateAbsent.length > 0) {
+           reportText += `\n🔴 VẮNG / TRỄ (${rd.lateAbsent.length}):\n`;
+           rd.lateAbsent.forEach(item => {
+              reportText += `- ${item.ten} (${item.tt}${item.ghiChu ? ': ' + item.ghiChu : ''})\n`;
+           });
+        }
+        
+        if (rd.missing.length > 0) {
+           reportText += `\n🟡 CHƯA THAO TÁC (${rd.missing.length}):\n`;
+           rd.missing.forEach(item => {
+              reportText += `- ${item.ten} (${item.to})\n`;
+           });
+        }
+        
+        navigator.clipboard.writeText(reportText).then(() => {
+           App.showToast("Đã copy báo cáo! Bạn có thể dán thẳng vào nhóm Zalo.", "success");
+        }).catch(err => {
+           console.error("Lỗi copy: ", err);
+           App.showToast("Lỗi khi copy. Trình duyệt của bạn có thể chặn tính năng này.", "error");
+        });
       },
 
       refreshDashboard: async (btnEl) => {

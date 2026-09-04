@@ -66,10 +66,6 @@
           <label class="block text-xs font-semibold text-gray-600 mb-1">Loại họp <span class="text-red-500">*</span></label>
           <select id="inp-loai" onchange="App.onChangeLoai()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-gray-50">
             <option value="" disabled selected>-- Chọn loại cuộc họp --</option>
-            <option value="Họp chi bộ">Họp chi bộ</option>
-            <option value="Họp hội đồng">Họp hội đồng</option>
-            <option value="Họp tổ">Họp tổ</option>
-            <option value="Họp trung tâm">Họp trung tâm</option>
             <option value="Họp khác">Họp khác</option>
           </select>
           <div id="inp-loai-khac-container" class="hidden mt-3 animate-fade-in">
@@ -181,7 +177,7 @@
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
-    const API_URL = "https://script.google.com/macros/s/AKfycbwYyweyTMMj-7-W9a2FtrctyPh8VrkkyDq0vdX7NBCK1Q7RFvQ_yfWhFTwoOvEpw5fH/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbzPbymS4syR6KvM56Qz9_d5QavZ3LFUevDeVaTIeuHIyjEuFaqCb_94iYW7ksvTLEcj/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
     // TRẠNG THÁI ỨNG DỤNG (STATE)
     // ==========================================
     const App = {
@@ -306,8 +302,23 @@
         
         App.setLoadingState(true);
         try {
-          // Lấy danh sách GV
-          App.state.giaoVien = await App.fetchAPI('getGiaoVien');
+          // Lấy danh sách GV & Loại cuộc họp song song
+          const [giaoVienRes, loaiCuocHopRes] = await Promise.all([
+             App.fetchAPI('getGiaoVien'),
+             App.fetchAPI('getLoaiCuocHop')
+          ]);
+          App.state.giaoVien = giaoVienRes;
+          
+          // Đổ dữ liệu vào Dropdown Loại cuộc họp
+          const selLoai = document.getElementById('inp-loai');
+          let optsLoai = `<option value="" disabled selected>-- Chọn loại cuộc họp --</option>`;
+          if (loaiCuocHopRes && loaiCuocHopRes.length > 0) {
+             loaiCuocHopRes.forEach(loai => {
+                optsLoai += `<option value="${App.escapeHtml(loai)}">${App.escapeHtml(loai)}</option>`;
+             });
+          }
+          optsLoai += `<option value="Họp khác">Họp khác</option>`;
+          if (selLoai) selLoai.innerHTML = optsLoai;
           App.state.toChuyenMon = new Set(App.state.giaoVien.map(gv => gv.toChuyenMon).filter(Boolean));
           
           // Đổ dữ liệu vào Dropdown Tổ

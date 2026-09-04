@@ -32,11 +32,14 @@
 
   <!-- Header -->
   <header class="bg-blue-600 text-white shadow-md">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-center">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-center relative">
       <div class="flex items-center space-x-2">
         <i class="fas fa-check-double text-2xl"></i>
         <h1 class="text-xl font-bold uppercase tracking-wider">Hệ Thống Điểm Danh</h1>
       </div>
+      <a href="admin.html" title="Đến trang Quản Trị BGH" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-300 hover:text-white transition-colors">
+        <i class="fas fa-user-shield text-xl"></i>
+      </a>
     </div>
   </header>
 
@@ -177,7 +180,7 @@
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
-    const API_URL = "https://script.google.com/macros/s/AKfycbyS6Y624610zwuu8L_sz5PeYUnLpvBb0HCoUcPs1aZP8Wy8gJKNO3ORdO4-qy1oMy3x/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbwYyweyTMMj-7-W9a2FtrctyPh8VrkkyDq0vdX7NBCK1Q7RFvQ_yfWhFTwoOvEpw5fH/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
     // TRẠNG THÁI ỨNG DỤNG (STATE)
     // ==========================================
     const App = {

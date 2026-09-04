@@ -177,7 +177,7 @@
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
-    const API_URL = "https://script.google.com/macros/s/AKfycbzPbymS4syR6KvM56Qz9_d5QavZ3LFUevDeVaTIeuHIyjEuFaqCb_94iYW7ksvTLEcj/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbztkwuVJ8torULQjElw8180RBvXbatJ21B_d6Ggt6UCajWpjBik-_eMb6a3SZb8b-U5/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
     // TRẠNG THÁI ỨNG DỤNG (STATE)
     // ==========================================
     const App = {
@@ -226,6 +226,15 @@
           overlay.classList.add('hidden');
           if (form) form.classList.remove('hidden');
         }
+      },
+      
+      getDeviceId: () => {
+        let deviceId = localStorage.getItem('DEVICE_ID');
+        if (!deviceId) {
+           deviceId = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+           localStorage.setItem('DEVICE_ID', deviceId);
+        }
+        return deviceId;
       },
 
       getCurrentMaCuocHop: () => {
@@ -606,7 +615,8 @@
               hoTen: tenGV,
               toChuyenMon: selectedTo,
               trangThai: trangThai,
-              ghiChu: ghiChu
+              ghiChu: ghiChu,
+              deviceId: App.getDeviceId()
             }
           });
           

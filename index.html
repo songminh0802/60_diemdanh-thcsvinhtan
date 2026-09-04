@@ -65,6 +65,7 @@
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Loại họp <span class="text-red-500">*</span></label>
           <select id="inp-loai" onchange="App.onChangeLoai()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-gray-50">
+            <option value="" disabled selected>-- Chọn loại cuộc họp --</option>
             <option value="Họp chi bộ">Họp chi bộ</option>
             <option value="Họp hội đồng">Họp hội đồng</option>
             <option value="Họp tổ">Họp tổ</option>
@@ -294,7 +295,11 @@
 
       init: async () => {
         const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        
         const dateInp = document.getElementById('inp-date');
         dateInp.value = todayStr;
         dateInp.max = todayStr; // Ngăn chọn ngày trong tương lai
@@ -547,6 +552,12 @@
         }
 
         const loaiHop = document.getElementById('inp-loai').value;
+        if (!loaiHop) {
+           App.showToast("Bắt buộc chọn Loại cuộc họp!", "error");
+           document.getElementById('inp-loai').focus();
+           return;
+        }
+        
         if (loaiHop === "Họp khác") {
            const khacVal = document.getElementById('inp-loai-khac').value.trim();
            if (!khacVal) {
@@ -555,8 +566,20 @@
               return;
            }
         }
-
         const maCuocHop = App.getCurrentMaCuocHop();
+        
+        // NGĂN CHẶN CHỌN NGÀY TƯƠNG LAI
+        const dateRaw = document.getElementById('inp-date').value;
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        if (dateRaw > todayStr) {
+           App.showToast("Không được điểm danh trước cho ngày tương lai!", "error");
+           return;
+        }
+
         const originalHtml = btnEl.innerHTML;
         
         // Loading state trên nút

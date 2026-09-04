@@ -185,6 +185,14 @@
         </button>
       </div>
 
+      <!-- Lọc theo tổ -->
+      <div class="mb-4">
+         <select id="dash-filter-to" onchange="App.renderDashboard()" class="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-blue-50 text-blue-800 shadow-sm cursor-pointer hover:bg-blue-100 transition-colors">
+            <option value="all">Hiển thị Tất cả Giáo viên</option>
+            <!-- Options rendered from JS -->
+         </select>
+      </div>
+
       <!-- Thống kê theo Tổ chuyên môn -->
       <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 mb-6">
         <div class="flex justify-between items-end mb-3 border-b border-gray-200 pb-2">
@@ -421,7 +429,13 @@
       },
 
       renderDashboard: () => {
-        const allTeachers = App.state.giaoVien || [];
+        const selectedDashTo = document.getElementById('dash-filter-to') ? document.getElementById('dash-filter-to').value : 'all';
+        let allTeachers = App.state.giaoVien || [];
+        
+        if (selectedDashTo !== 'all') {
+           allTeachers = allTeachers.filter(gv => gv.toChuyenMon === selectedDashTo);
+        }
+
         const attendanceMap = App.state.diemDanh || {}; 
         
         let presentCount = 0;
@@ -527,10 +541,16 @@
           // Đổ dữ liệu vào Dropdown Tổ
           const selTo = document.getElementById('inp-filter-to');
           let opts = `<option value="" disabled selected>-- Chọn Tổ của bạn --</option>`;
+          let dashOpts = `<option value="all">Hiển thị Tất cả Giáo viên</option>`;
+          
           Array.from(App.state.toChuyenMon).sort().forEach(to => {
             opts += `<option value="${App.escapeHtml(to)}">${App.escapeHtml(to)}</option>`;
+            dashOpts += `<option value="${App.escapeHtml(to)}">${App.escapeHtml(to)}</option>`;
           });
           selTo.innerHTML = opts;
+          
+          const dashFilterTo = document.getElementById('dash-filter-to');
+          if (dashFilterTo) dashFilterTo.innerHTML = dashOpts;
 
           // Lấy dữ liệu điểm danh ngày hiện tại
           await App.loadAttendanceData();

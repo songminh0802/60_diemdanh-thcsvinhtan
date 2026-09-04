@@ -223,6 +223,38 @@
            allTeachers = allTeachers.filter(gv => gv.toChuyenMon === selectedDashTo);
         }
 
+        // --- NEW LOGIC: Lọc tự động theo Nhóm phụ (Cột D) ---
+        const historySelect = document.getElementById('dash-history-select');
+        if (historySelect && historySelect.selectedIndex > -1) {
+           const meetingName = historySelect.options[historySelect.selectedIndex].text.toLowerCase();
+           
+           // Trích xuất tất cả các từ khóa Nhóm phụ có trong Cột D của mọi GV
+           let nhomPhuTags = new Set();
+           (App.state.giaoVien || []).forEach(gv => {
+               if (gv.nhomPhu) {
+                   gv.nhomPhu.split(',').forEach(tag => {
+                       const t = tag.trim().toLowerCase();
+                       if (t.length > 2) nhomPhuTags.add(t);
+                   });
+               }
+           });
+           
+           // Ưu tiên so sánh từ khóa dài trước (ví dụ: "Ban chấp hành Công đoàn" trước "Công đoàn")
+           const sortedTags = Array.from(nhomPhuTags).sort((a, b) => b.length - a.length);
+           let matchedTag = null;
+           for (const tag of sortedTags) {
+               if (meetingName.includes(tag)) {
+                   matchedTag = tag;
+                   break;
+               }
+           }
+           
+           // Nếu Tên cuộc họp có chứa một Nhóm phụ, ta tự động Lọc bỏ những người không thuộc Nhóm đó
+           if (matchedTag) {
+               allTeachers = allTeachers.filter(gv => gv.nhomPhu && gv.nhomPhu.toLowerCase().includes(matchedTag));
+           }
+        }
+
         const attendanceMap = App.state.diemDanh || {}; 
         
         let presentCount = 0;

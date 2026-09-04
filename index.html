@@ -270,10 +270,7 @@
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
-    // ==========================================
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyBtbt3hD-rIrCI6M7R_puxCs-quon9YvGW8cTswHulLCDGEqmsJssJimg5Smq-NKkR/exec"; 
-    
-    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbyS6Y624610zwuu8L_sz5PeYUnLpvBb0HCoUcPs1aZP8Wy8gJKNO3ORdO4-qy1oMy3x/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
     // TRẠNG THÁI ỨNG DỤNG (STATE)
     // ==========================================
     const App = {
@@ -356,7 +353,7 @@
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
         
         try {
-          let url = `${WEB_APP_URL}?action=${action}`;
+          let url = `${API_URL}?action=${action}`;
           let options = { signal: controller.signal };
           if (method === 'POST') {
             options = {

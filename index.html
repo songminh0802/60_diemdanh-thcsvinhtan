@@ -759,6 +759,12 @@
         const tenGV = document.getElementById('inp-select-gv').options[document.getElementById('inp-select-gv').selectedIndex].text;
         const selectedTo = document.getElementById('inp-filter-to').value;
         if (!maGV) return;
+        
+        // KIỂM TRA TRÙNG LẶP Ở FRONTEND
+        if (App.state.diemDanh && App.state.diemDanh[maGV]) {
+           App.showToast("Thầy/cô đã gửi điểm danh cho cuộc họp này rồi! Để thay đổi, vui lòng báo Admin.", "error");
+           return;
+        }
 
         const selectedRadio = document.querySelector('input[name="status"]:checked');
         if (!selectedRadio) {
@@ -846,7 +852,8 @@
           }, 2000);
 
         } catch (error) {
-          App.showToast("Có lỗi xảy ra, chưa lưu được!", 'error');
+          const msg = error.message ? error.message : "Có lỗi xảy ra, chưa lưu được!";
+          App.showToast(msg, 'error');
         } finally {
           btnEl.innerHTML = originalHtml;
           btnEl.disabled = false;

@@ -177,7 +177,7 @@
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
-    const API_URL = "https://script.google.com/macros/s/AKfycbwbbd3GiRvVv7l6jUV-IosiFt_nuzZN9bA_WGNFOfryIF8PyovOya9s4F_2RA2qUnyT/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbzbIY_wmZh2JUVNytBE3MjgSpvrorb4CjJK2PFvxli0Jta09JoKzq1Jy3QBzWY76ShB/exec"; // THAY LINK GOOGLE APPS SCRIPT VÀO ĐÂY
     // TRẠNG THÁI ỨNG DỤNG (STATE)
     // ==========================================
     const App = {
@@ -235,6 +235,32 @@
            localStorage.setItem('DEVICE_ID', deviceId);
         }
         return deviceId;
+      },
+      
+      getGPSLocation: () => {
+        return new Promise((resolve) => {
+          if (!navigator.geolocation) {
+            resolve("Lỗi: Không hỗ trợ GPS");
+            return;
+          }
+          
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const lat = position.coords.latitude;
+              const lng = position.coords.longitude;
+              // Link Google Maps luôn cho Admin dễ bấm
+              resolve(`https://maps.google.com/?q=${lat},${lng}`);
+            },
+            (error) => {
+              if (error.code === error.PERMISSION_DENIED) {
+                 resolve("Lỗi: Từ chối cung cấp GPS");
+              } else {
+                 resolve("Lỗi: Không thể lấy định vị");
+              }
+            },
+            { timeout: 5000, maximumAge: 60000, enableHighAccuracy: true }
+          );
+        });
       },
 
       getCurrentMaCuocHop: () => {
@@ -602,12 +628,16 @@
 
         const originalHtml = btnEl.innerHTML;
         
-        // Loading state trên nút
-        btnEl.innerHTML = `<div class="spinner"></div> ĐANG GỬI...`;
+        // Loading state trên nút (GPS)
+        btnEl.innerHTML = `<div class="spinner"></div> ĐANG ĐỊNH VỊ...`;
         btnEl.disabled = true;
         btnEl.classList.add('opacity-80', 'cursor-not-allowed');
 
         try {
+          const gpsLocation = await App.getGPSLocation();
+          
+          btnEl.innerHTML = `<div class="spinner"></div> ĐANG GỬI...`;
+
           await App.fetchAPI('saveDiemDanh', 'POST', {
             data: {
               maCuocHop: maCuocHop,
@@ -616,7 +646,8 @@
               toChuyenMon: selectedTo,
               trangThai: trangThai,
               ghiChu: ghiChu,
-              deviceId: App.getDeviceId()
+              deviceId: App.getDeviceId(),
+              gps: gpsLocation
             }
           });
           

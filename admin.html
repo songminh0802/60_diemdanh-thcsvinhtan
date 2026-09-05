@@ -382,7 +382,7 @@
                App.showToast("Vui lòng chọn 1 cuộc họp để xem", "error");
                return;
            }
-           const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { maCuocHop: val });
+           const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop: val } });
            App.state.diemDanh = res.map;
            App.renderDashboard();
            App.showToast("Đã cập nhật dữ liệu sĩ số mới nhất!", "success");
@@ -440,7 +440,7 @@
          if(btn) btn.innerHTML = `<i class="fas fa-sync-alt fa-spin mr-1"></i>`;
          
          try {
-             const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { maCuocHop: val });
+             const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop: val } });
              App.state.diemDanh = res.map;
              App.renderDashboard();
          } catch(e) {

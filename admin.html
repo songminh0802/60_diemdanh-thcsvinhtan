@@ -843,20 +843,6 @@
       },
 
       init: async () => {
-         // Ask for password
-         let valid = false;
-         while(!valid) {
-             const pass = prompt("Vui lòng nhập mật khẩu Quản trị viên:");
-             if (pass === "admin123") {
-                 valid = true;
-             } else if (pass === null) {
-                 document.body.innerHTML = "<div class='p-10 text-center font-bold text-red-600'>Bạn đã hủy đăng nhập. Hãy F5 để thử lại!</div>";
-                 return;
-             } else {
-                 alert("Mật khẩu không chính xác!");
-             }
-         }
-        
         try {
           // Lấy danh sách GV
           App.state.giaoVien = await App.fetchAPI('getGiaoVien');

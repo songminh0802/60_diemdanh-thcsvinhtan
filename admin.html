@@ -135,8 +135,13 @@
 
       <!-- Danh sách chi tiết -->
       <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg"><i class="fas fa-exclamation-circle text-orange-500 mr-2"></i> Danh sách Chưa thao tác</h3>
-      <div id="dash-missing-list" class="space-y-2 mb-6 max-h-48 overflow-y-auto">
+      <div id="dash-missing-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto">
         <!-- Render from JS -->
+      </div>
+      <div id="dash-missing-action" class="hidden mb-6">
+        <button onclick="App.chotSo(this)" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center text-sm">
+          <i class="fas fa-lock mr-2"></i> CHỐT SỔ & ĐÁNH VẮNG NHỮNG NGƯỜI TRÊN
+        </button>
       </div>
       
       <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg"><i class="fas fa-clipboard-list text-red-500 mr-2"></i> Danh sách Vắng / Trễ</h3>
@@ -340,7 +345,7 @@
                  absentLateList.push({ten, to, tt, ghiChu: attendanceMap[id].ghiChu});
               }
            } else {
-              missingList.push({ten, to});
+              missingList.push({maGV: id, hoTen: ten, toChuyenMon: to, ten, to});
            }
         });
         
@@ -390,6 +395,49 @@
         
         document.getElementById('dash-missing-list').innerHTML = renderList(missingList, true);
         document.getElementById('dash-late-list').innerHTML = renderList(absentLateList, false);
+         
+         const missingAction = document.getElementById('dash-missing-action');
+         if (missingAction) {
+            if (missingList.length > 0) missingAction.classList.remove('hidden');
+            else missingAction.classList.add('hidden');
+         }
+      },
+
+      chotSo: async (btnEl) => {
+         const rd = App.state.reportData || { missing: [], lateAbsent: [] };
+         const missingList = rd.missing;
+         if (!missingList || missingList.length === 0) return;
+         
+         if (!confirm(`Bạn có chắc chắn muốn CHỐT SỔ và tự động đánh "Vắng KP" cho ${missingList.length} người này không?\n\nThao tác này sẽ lưu vĩnh viễn vào báo cáo.`)) {
+            return;
+         }
+         
+         const selectEl = document.getElementById('dash-history-select');
+         const maCuocHop = selectEl.value;
+         if (!maCuocHop || maCuocHop === "current") {
+            App.showToast("Không thể chốt sổ cho mục này. Vui lòng chọn một cuộc họp cụ thể trong danh sách Lịch sử.", "error");
+            return;
+         }
+
+         const originalHtml = btnEl.innerHTML;
+         btnEl.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> ĐANG CHỐT SỔ...`;
+         btnEl.disabled = true;
+         btnEl.classList.add('opacity-70');
+         
+         try {
+            const res = await App.fetchAPI('chotSoCuocHop', 'POST', { data: { maCuocHop, danhSachVang: missingList } });
+            App.showToast(res.message || "Đã chốt sổ thành công!", "success");
+            
+            // Tự động làm mới dữ liệu Dashboard
+            const btnRefresh = document.getElementById('btn-refresh-dash');
+            if (btnRefresh) App.refreshDashboard(btnRefresh);
+         } catch(e) {
+            App.showToast(e.message || "Lỗi khi chốt sổ!", "error");
+         } finally {
+            btnEl.innerHTML = originalHtml;
+            btnEl.disabled = false;
+            btnEl.classList.remove('opacity-70');
+         }
       },
 
       copyReport: () => {

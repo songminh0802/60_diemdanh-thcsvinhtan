@@ -7,6 +7,12 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  
   <style>
     body { background-color: #f8fafc; }
     .toast-enter { animation: toast-in-center 0.3s forwards; }
@@ -32,16 +38,37 @@
 
   <!-- Header -->
   <header class="bg-blue-600 text-white shadow-md">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-center">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center space-x-2">
         <i class="fas fa-check-double text-2xl"></i>
         <h1 class="text-xl font-bold uppercase tracking-wider">Hệ Thống Điểm Danh</h1>
       </div>
+      <div id="user-menu" class="hidden items-center space-x-3">
+        <img id="user-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full border-2 border-white bg-gray-200">
+        <span id="user-name" class="font-semibold hidden sm:inline text-sm"></span>
+        <button onclick="Auth.logout()" class="bg-blue-700 hover:bg-blue-800 p-2 rounded-lg text-xs transition-colors" title="Đăng xuất"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
     </div>
   </header>
 
+  <!-- Màn hình Đăng nhập -->
+  <main id="auth-screen" class="container mx-auto px-4 mt-12 max-w-sm flex-1 flex flex-col items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 w-full text-center">
+      <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-user-shield text-4xl text-blue-600"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">Trang Quản Trị</h2>
+      <p class="text-gray-500 mb-8 text-sm">Vui lòng đăng nhập bằng tài khoản được cấp quyền để truy cập hệ thống.</p>
+      
+      <button onclick="Auth.loginWithGoogle()" class="w-full flex items-center justify-center bg-white border-2 border-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl hover:bg-gray-50 transition-all active:scale-95">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" class="w-6 h-6 mr-3">
+        Đăng nhập bằng Google
+      </button>
+    </div>
+  </main>
+
   <!-- Main Container -->
-  <main class="container mx-auto px-4 mt-6 max-w-lg sm:max-w-4xl flex-1 flex flex-col" id="app-container">
+  <main class="container mx-auto px-4 mt-6 max-w-lg sm:max-w-4xl flex-1 flex flex-col hidden admin-only" id="app-container">
     
     <!-- Tab Navigation -->
     <div class="flex space-x-2 mb-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
@@ -215,6 +242,113 @@
     // CẤU HÌNH HỆ THỐNG
     const API_URL = "https://script.google.com/macros/s/AKfycbw-o-1F4vrSASiRIDdoaDYaToy1yAnWJdaqSwSDSo4mnniaWQZy9m8JIbpVGdTpV433/exec";
     
+    // ==========================================
+    // FIREBASE CONFIG
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVueYYokJdqm_uCMqBL24d6YCtMTamCM8",
+      authDomain: "csdlsongminh.firebaseapp.com",
+      databaseURL: "https://csdlsongminh-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "csdlsongminh",
+      storageBucket: "csdlsongminh.firebasestorage.app",
+      messagingSenderId: "319501136448",
+      appId: "1:319501136448:web:1c2a9a1b5582d3a9f725a5",
+      measurementId: "G-VPPH1RXD7H"
+    };
+    
+    // DANH SÁCH EMAIL ADMIN
+    const ADMIN_EMAILS = [
+      "songminh138@gmail.com"
+    ];
+
+    if (Object.keys(firebaseConfig).length > 0) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    
+    const db = (typeof firebase !== 'undefined' && firebase.firestore && Object.keys(firebaseConfig).length > 0) ? firebase.firestore() : null;
+
+    const Auth = {
+       loginWithGoogle: () => {
+          if (Object.keys(firebaseConfig).length === 0) {
+             alert("Chưa cấu hình Firebase! Thầy vui lòng cập nhật firebaseConfig trong code ạ.");
+             return;
+          }
+          const provider = new firebase.auth.GoogleAuthProvider();
+          firebase.auth().signInWithPopup(provider).catch(err => {
+             alert("Lỗi đăng nhập: " + err.message);
+          });
+       },
+       
+       logout: () => {
+          firebase.auth().signOut();
+       },
+       
+       checkRole: (user) => {
+          // Kiểm tra email cứng
+          if (ADMIN_EMAILS.includes(user.email)) {
+             Auth.grantAdminAccess(user);
+             return;
+          }
+          
+          // Kiểm tra trên Firestore
+          if (db) {
+             db.collection('users_diemdanhvinhtan').doc(user.uid).get().then(doc => {
+                if (doc.exists && doc.data().role === 'admin') {
+                   Auth.grantAdminAccess(user);
+                } else {
+                   alert("Tài khoản của thầy/cô không có quyền truy cập trang Quản trị này!");
+                   Auth.logout();
+                }
+             }).catch(err => {
+                alert("Lỗi kiểm tra phân quyền!");
+             });
+          } else {
+             alert("Tài khoản của thầy/cô không có quyền truy cập trang Quản trị này!");
+             Auth.logout();
+          }
+       },
+       
+       grantAdminAccess: (user) => {
+          document.getElementById('auth-screen').classList.add('hidden');
+          document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+          
+          const um = document.getElementById('user-menu');
+          um.classList.remove('hidden');
+          um.classList.add('flex');
+          document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/150';
+          document.getElementById('user-name').innerText = user.displayName || user.email;
+          
+          // Khởi động app
+          App.init();
+       }
+    };
+    
+    // Lắng nghe trạng thái đăng nhập
+    if (typeof firebase !== 'undefined' && firebase.auth && Object.keys(firebaseConfig).length > 0) {
+       firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+             // Đã đăng nhập, lưu thông tin lên firestore
+             if (db) {
+                db.collection('users_diemdanhvinhtan').doc(user.uid).set({
+                   email: user.email,
+                   displayName: user.displayName,
+                   photoURL: user.photoURL,
+                   lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).catch(e => console.log("Firestore chưa setup Rules", e));
+             }
+             
+             Auth.checkRole(user);
+          } else {
+             // Chưa đăng nhập
+             document.getElementById('auth-screen').classList.remove('hidden');
+             document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+             const um = document.getElementById('user-menu');
+             um.classList.add('hidden');
+             um.classList.remove('flex');
+          }
+       });
+    }
+
     // TRẠNG THÁI ỨNG DỤNG (STATE)
     // ==========================================
     const App = {
@@ -763,8 +897,14 @@
     };
 
     // INIT
+    // App.init() sẽ được gọi khi Đăng nhập thành công (xem hàm Auth.grantAdminAccess)
     window.addEventListener('DOMContentLoaded', () => {
-      App.init();
+       // Nếu chưa điền firebaseConfig thì cứ gọi App.init() thẳng để dùng tạm trong lúc chưa setup xong
+       if (Object.keys(firebaseConfig).length === 0) {
+           document.getElementById('auth-screen').classList.add('hidden');
+           document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+           App.init();
+       }
     });
 
   </script>

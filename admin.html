@@ -213,7 +213,7 @@
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
-    const API_URL = "https://script.google.com/macros/s/AKfycby6fo5THObZzAFS5E1sRfPuekvzMnS5UppxXLT2X5cFFU70rJYIEw7ThBuaSey90tI/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw-o-1F4vrSASiRIDdoaDYaToy1yAnWJdaqSwSDSo4mnniaWQZy9m8JIbpVGdTpV433/exec";
     
     // TRẠNG THÁI ỨNG DỤNG (STATE)
     // ==========================================
@@ -327,16 +327,19 @@
         let missingList = [];
         let absentLateList = [];
         let toCountMap = {}; 
+        let expectedTotal = 0;
         
         allTeachers.forEach(gv => {
            const id = gv.maGV || gv.hoTen;
            const ten = gv.hoTen || "Không rõ";
            const to = gv.toChuyenMon || "Không rõ";
-           
-           if (!toCountMap[to]) toCountMap[to] = 0;
-           toCountMap[to]++;
+           const isExempt = gv.ghiChu && gv.ghiChu.toString().trim() !== "";
            
            if (attendanceMap[id]) {
+              expectedTotal++;
+              if (!toCountMap[to]) toCountMap[to] = 0;
+              toCountMap[to]++;
+              
               const tt = attendanceMap[id].trangThai;
               if (tt === "Có mặt") {
                  presentCount++;
@@ -345,11 +348,17 @@
                  absentLateList.push({ten, to, tt, ghiChu: attendanceMap[id].ghiChu});
               }
            } else {
-              missingList.push({maGV: id, hoTen: ten, toChuyenMon: to, ten, to});
+              if (!isExempt) {
+                 expectedTotal++;
+                 if (!toCountMap[to]) toCountMap[to] = 0;
+                 toCountMap[to]++;
+                 
+                 missingList.push({maGV: id, hoTen: ten, toChuyenMon: to, ten, to});
+              }
            }
         });
         
-        const total = allTeachers.length;
+        const total = expectedTotal;
         const missingCount = missingList.length;
         const submittedCount = presentCount + absentLateCount;
         const percent = total > 0 ? Math.round((submittedCount / total) * 100) : 0;

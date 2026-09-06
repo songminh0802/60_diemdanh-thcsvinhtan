@@ -59,10 +59,14 @@
          </select>
       </div>
 
-      <!-- Lọc theo tổ -->
-      <div class="mb-4">
+      <!-- Các bộ lọc -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
          <select id="dash-filter-to" onchange="App.renderDashboard()" class="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-blue-50 text-blue-800 shadow-sm cursor-pointer hover:bg-blue-100 transition-colors">
-            <option value="all">Hiển thị Tất cả Giáo viên</option>
+            <option value="all">-- Lọc theo Tổ chuyên môn --</option>
+            <!-- Options rendered from JS -->
+         </select>
+         <select id="dash-filter-nhom" onchange="App.renderDashboard()" class="w-full border-2 border-teal-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold bg-teal-50 text-teal-800 shadow-sm cursor-pointer hover:bg-teal-100 transition-colors">
+            <option value="all">-- Lọc theo Cơ sở / Nhóm --</option>
             <!-- Options rendered from JS -->
          </select>
       </div>
@@ -217,42 +221,15 @@
       // ----------------------------------------
       renderDashboard: () => {
         const selectedDashTo = document.getElementById('dash-filter-to') ? document.getElementById('dash-filter-to').value : 'all';
+        const selectedDashNhom = document.getElementById('dash-filter-nhom') ? document.getElementById('dash-filter-nhom').value : 'all';
         let allTeachers = App.state.giaoVien || [];
         
         if (selectedDashTo !== 'all') {
            allTeachers = allTeachers.filter(gv => gv.toChuyenMon === selectedDashTo);
         }
-
-        // --- NEW LOGIC: Lọc tự động theo Nhóm phụ (Cột D) ---
-        const historySelect = document.getElementById('dash-history-select');
-        if (historySelect && historySelect.selectedIndex > -1) {
-           const meetingName = historySelect.options[historySelect.selectedIndex].text.toLowerCase();
-           
-           // Trích xuất tất cả các từ khóa Nhóm phụ có trong Cột D của mọi GV
-           let nhomPhuTags = new Set();
-           (App.state.giaoVien || []).forEach(gv => {
-               if (gv.nhomPhu) {
-                   gv.nhomPhu.split(',').forEach(tag => {
-                       const t = tag.trim().toLowerCase();
-                       if (t.length > 2) nhomPhuTags.add(t);
-                   });
-               }
-           });
-           
-           // Ưu tiên so sánh từ khóa dài trước (ví dụ: "Ban chấp hành Công đoàn" trước "Công đoàn")
-           const sortedTags = Array.from(nhomPhuTags).sort((a, b) => b.length - a.length);
-           let matchedTag = null;
-           for (const tag of sortedTags) {
-               if (meetingName.includes(tag)) {
-                   matchedTag = tag;
-                   break;
-               }
-           }
-           
-           // Nếu Tên cuộc họp có chứa một Nhóm phụ, ta tự động Lọc bỏ những người không thuộc Nhóm đó
-           if (matchedTag) {
-               allTeachers = allTeachers.filter(gv => gv.nhomPhu && gv.nhomPhu.toLowerCase().includes(matchedTag));
-           }
+        
+        if (selectedDashNhom !== 'all') {
+           allTeachers = allTeachers.filter(gv => gv.nhomPhu && gv.nhomPhu.split(',').map(s=>s.trim()).includes(selectedDashNhom));
         }
 
         const attendanceMap = App.state.diemDanh || {}; 
@@ -432,6 +409,27 @@
          }
       },
 
+      autoDetectGroupFilter: () => {
+         const historySelect = document.getElementById('dash-history-select');
+         const nhomSelect = document.getElementById('dash-filter-nhom');
+         if (!historySelect || historySelect.selectedIndex <= -1 || !nhomSelect) return;
+         
+         const meetingName = historySelect.options[historySelect.selectedIndex].text.toLowerCase();
+         let matchedValue = 'all';
+         let longestMatch = 0;
+         
+         Array.from(nhomSelect.options).forEach(opt => {
+             if (opt.value === 'all') return;
+             const valLower = opt.value.toLowerCase();
+             if (meetingName.includes(valLower) && valLower.length > longestMatch) {
+                 longestMatch = valLower.length;
+                 matchedValue = opt.value;
+             }
+         });
+         
+         nhomSelect.value = matchedValue;
+      },
+
       onSelectHistory: async () => {
          const val = document.getElementById('dash-history-select').value;
          if (!val) return;
@@ -442,6 +440,7 @@
          try {
              const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop: val } });
              App.state.diemDanh = res.map;
+             App.autoDetectGroupFilter();
              App.renderDashboard();
          } catch(e) {
              App.showToast("Lỗi tải dữ liệu điểm danh!", "error");
@@ -471,12 +470,29 @@
           App.state.toChuyenMon = new Set(App.state.giaoVien.map(gv => gv.toChuyenMon).filter(Boolean));
           
           // Đổ dữ liệu vào Dropdown Tổ
-          let dashOpts = `<option value="all">Hiển thị Tất cả Giáo viên</option>`;
+          let dashOpts = `<option value="all">-- Lọc theo Tổ chuyên môn --</option>`;
           Array.from(App.state.toChuyenMon).sort().forEach(to => {
             dashOpts += `<option value="${App.escapeHtml(to)}">${App.escapeHtml(to)}</option>`;
           });
           const dashFilterTo = document.getElementById('dash-filter-to');
           if (dashFilterTo) dashFilterTo.innerHTML = dashOpts;
+
+          // Đổ dữ liệu vào Dropdown Nhóm phụ
+          let nhomPhuSet = new Set();
+          App.state.giaoVien.forEach(gv => {
+              if (gv.nhomPhu) {
+                  gv.nhomPhu.split(',').forEach(tag => {
+                      const t = tag.trim();
+                      if (t.length > 0) nhomPhuSet.add(t);
+                  });
+              }
+          });
+          let dashNhomOpts = `<option value="all">-- Lọc theo Cơ sở / Nhóm --</option>`;
+          Array.from(nhomPhuSet).sort().forEach(nhom => {
+             dashNhomOpts += `<option value="${App.escapeHtml(nhom)}">${App.escapeHtml(nhom)}</option>`;
+          });
+          const dashFilterNhom = document.getElementById('dash-filter-nhom');
+          if (dashFilterNhom) dashFilterNhom.innerHTML = dashNhomOpts;
 
           // Lấy danh sách lịch sử cuộc họp
           await App.loadHistory();

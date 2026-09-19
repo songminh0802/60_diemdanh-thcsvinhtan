@@ -191,7 +191,7 @@
           <button onclick="App.diemHoBulk('Có mặt',this)" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">✅ Có mặt</button>
           <button onclick="App.diemHoBulk('Đi trễ',this)" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">⏰ Đi trễ</button>
           <button onclick="App.diemHoBulk('Vắng phép',this)" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">📄 V.Phép</button>
-          <button onclick="App.diemHoBulk('Miễn họp',this)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">🚫 Miễn</button>
+          <button onclick="App.diemHoBulk('Được miễn',this)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">🚫 Miễn</button>
         </div>
       </div>
       <div id="dash-missing-action" class="hidden mb-6">
@@ -206,7 +206,7 @@
       </div>
       
       <div id="dash-exempt-container" class="hidden mt-4">
-        <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg"><i class="fas fa-user-slash text-blue-500 mr-2"></i> Danh sách Miễn họp</h3>
+        <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg"><i class="fas fa-user-slash text-blue-500 mr-2"></i> Danh sách Được miễn</h3>
         <div id="dash-exempt-list" class="space-y-2 max-h-48 overflow-y-auto">
           <!-- Render from JS -->
         </div>
@@ -514,8 +514,8 @@
            if (attendanceMap[id]) {
               const tt = attendanceMap[id].trangThai;
               
-              // Bỏ qua hoàn toàn những người được Miễn họp khỏi tổng số lượng, nhưng lưu vào danh sách
-              if (tt === "Miễn họp") {
+              // Bỏ qua hoàn toàn những người "Được miễn" khỏi tổng số lượng, nhưng lưu vào danh sách
+              if (tt === "Được miễn") {
                  exemptList.push({ten, to, tt, ghiChu: attendanceMap[id].ghiChu});
                  return;
               }
@@ -591,12 +591,12 @@
                    onchange="App.updateBulkBar()">` : ''}
                  <div class="flex-1 min-w-0"><span class="font-bold text-gray-700">${App.escapeHtml(item.ten)}</span> <span class="text-xs text-gray-400">(${App.escapeHtml(item.to)})</span></div>
                  ${!isMissing
-                   ? `<span class="px-2 py-0.5 rounded text-xs font-bold flex-shrink-0 ml-2 ${item.tt === 'Miễn họp' ? 'bg-blue-100 text-blue-700' : (item.tt === 'Đi trễ' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}">${App.escapeHtml(item.tt)} ${item.ghiChu ? '- ' + App.escapeHtml(item.ghiChu) : ''}</span>`
+                   ? `<span class="px-2 py-0.5 rounded text-xs font-bold flex-shrink-0 ml-2 ${item.tt === 'Được miễn' ? 'bg-blue-100 text-blue-700' : (item.tt === 'Đi trễ' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}">${App.escapeHtml(item.tt)} ${item.ghiChu ? '- ' + App.escapeHtml(item.ghiChu) : ''}</span>`
                    : `<div class="flex space-x-1 flex-shrink-0 ml-2">
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Có mặt',this)" title="Có mặt" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">✅</button>
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Đi trễ',this)" title="Đi trễ" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">⏰</button>
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Vắng phép',this)" title="Vắng phép" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">📄</button>
-                       <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Miễn họp',this)" title="Miễn họp" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">🚫</button>
+                       <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Được miễn',this)" title="Được miễn" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">🚫</button>
                      </div>`
                  }
                </div>

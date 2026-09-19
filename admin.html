@@ -535,9 +535,18 @@
         const renderList = (arr, isMissing) => {
            if (arr.length === 0) return `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu.</div>`;
            return arr.map(item => `
-             <div class="flex justify-between items-center p-2 border-b border-gray-100 last:border-0 text-sm">
-               <div><span class="font-bold text-gray-700">${App.escapeHtml(item.ten)}</span> <span class="text-xs text-gray-400">(${App.escapeHtml(item.to)})</span></div>
-               ${!isMissing ? `<span class="px-2 py-0.5 rounded text-xs font-bold ${item.tt === 'Đi trễ' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">${App.escapeHtml(item.tt)} ${item.ghiChu ? '- ' + App.escapeHtml(item.ghiChu) : ''}</span>` : ''}
+             <div class="p-2 border-b border-gray-100 last:border-0 text-sm">
+               <div class="flex justify-between items-center">
+                 <div><span class="font-bold text-gray-700">${App.escapeHtml(item.ten)}</span> <span class="text-xs text-gray-400">(${App.escapeHtml(item.to)})</span></div>
+                 ${!isMissing
+                   ? `<span class="px-2 py-0.5 rounded text-xs font-bold ${item.tt === 'Đi trễ' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">${App.escapeHtml(item.tt)} ${item.ghiChu ? '- ' + App.escapeHtml(item.ghiChu) : ''}</span>`
+                   : `<div class="flex space-x-1 flex-shrink-0 ml-2">
+                       <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Có mặt',this)" title="Điểm danh hộ: Có mặt" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">✅</button>
+                       <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Đi trễ',this)" title="Điểm danh hộ: Đi trễ" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">⏰</button>
+                       <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Vắng phép',this)" title="Điểm danh hộ: Vắng phép" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">📄</button>
+                     </div>`
+                 }
+               </div>
              </div>
            `).join('');
         };
@@ -549,6 +558,38 @@
          if (missingAction) {
             if (missingList.length > 0) missingAction.classList.remove('hidden');
             else missingAction.classList.add('hidden');
+         }
+      },
+
+      diemHo: async (maGV, hoTen, toChuyenMon, trangThai, btnEl) => {
+         const selectEl = document.getElementById('dash-history-select');
+         const maCuocHop = selectEl ? selectEl.value : '';
+         if (!maCuocHop) {
+            App.showToast("Vui lòng chọn một cuộc họp trong danh sách trước!", "error");
+            return;
+         }
+         
+         // Disable tất cả 3 nút trong row để tránh bấm đôi
+         const rowEl = btnEl.closest('div[class*="border-b"]');
+         const btns = rowEl ? rowEl.querySelectorAll('button') : [btnEl];
+         btns.forEach(b => { b.disabled = true; b.classList.add('opacity-50'); });
+         
+         const originalHtml = btnEl.innerHTML;
+         btnEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+         
+         try {
+            const res = await App.fetchAPI('diemDanhHo', 'POST', {
+               data: { maCuocHop, maGV, hoTen, toChuyenMon, trangThai }
+            });
+            App.showToast(res.message || "Đã điểm danh hộ!", "success");
+            
+            // Làm mới dashboard sau khi ghi xong
+            const btnRefresh = document.getElementById('btn-refresh-dash');
+            if (btnRefresh) App.refreshDashboard(btnRefresh);
+         } catch(e) {
+            App.showToast(e.message || "Lỗi khi điểm danh hộ!", "error");
+            btns.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
+            btnEl.innerHTML = originalHtml;
          }
       },
 

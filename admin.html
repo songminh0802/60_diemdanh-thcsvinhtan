@@ -86,9 +86,14 @@
 
       <div class="flex items-center justify-between mb-4 border-b pb-3">
         <h2 class="text-lg font-bold text-blue-800 uppercase tracking-wider"><i class="fas fa-chart-pie mr-2"></i>Thống Kê Sĩ Số</h2>
-        <button id="btn-refresh-dash" onclick="App.refreshDashboard(this)" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center">
-          <i class="fas fa-sync-alt mr-1"></i> Làm mới
-        </button>
+        <div class="flex items-center space-x-2">
+          <button onclick="App.exportCSV()" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center" title="Xuất file CSV">
+            <i class="fas fa-file-csv mr-1"></i> Xuất
+          </button>
+          <button id="btn-refresh-dash" onclick="App.refreshDashboard(this)" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center">
+            <i class="fas fa-sync-alt mr-1"></i> Làm mới
+          </button>
+        </div>
       </div>
 
       <!-- Chọn cuộc họp (Lịch sử) -->
@@ -491,7 +496,6 @@
            const id = gv.maGV || gv.hoTen;
            const ten = gv.hoTen || "Không rõ";
            const to = gv.toChuyenMon || "Không rõ";
-           const isExempt = gv.ghiChu && gv.ghiChu.toString().trim() !== "";
            
            if (attendanceMap[id]) {
               const tt = attendanceMap[id].trangThai;
@@ -510,13 +514,10 @@
                  absentLateList.push({ten, to, tt, ghiChu: attendanceMap[id].ghiChu});
               }
            } else {
-              if (!isExempt) {
-                 expectedTotal++;
-                 if (!toCountMap[to]) toCountMap[to] = 0;
-                 toCountMap[to]++;
-                 
-                 missingList.push({maGV: id, hoTen: ten, toChuyenMon: to, ten, to});
-              }
+              expectedTotal++;
+              if (!toCountMap[to]) toCountMap[to] = 0;
+              toCountMap[to]++;
+              missingList.push({maGV: id, hoTen: ten, toChuyenMon: to, ten, to});
            }
         });
         
@@ -737,6 +738,63 @@
             btnEl.disabled = false;
             btnEl.classList.remove('opacity-70');
          }
+      },
+
+      exportCSV: () => {
+         const teachers = App.state.giaoVien || [];
+         const attendanceMap = App.state.diemDanh || {};
+         
+         if (teachers.length === 0) {
+            App.showToast("Chưa có dữ liệu để xuất!", "error");
+            return;
+         }
+         
+         const selectEl = document.getElementById('dash-history-select');
+         const selectedTo   = document.getElementById('dash-filter-to')?.value || 'all';
+         const selectedNhom = document.getElementById('dash-filter-nhom')?.value || 'all';
+         const meetingName  = selectEl?.options[selectEl.selectedIndex]?.text || 'diemdanh';
+         
+         // Lọc giống renderDashboard
+         let allTeachers = [...teachers];
+         if (selectedTo !== 'all') allTeachers = allTeachers.filter(gv => gv.toChuyenMon === selectedTo);
+         if (selectedNhom !== 'all') {
+            allTeachers = allTeachers.filter(gv => {
+               if (selectedNhom === 'Phân hiệu') return gv.phanHieu;
+               if (selectedNhom === 'Trung tâm')  return gv.trungTam;
+               if (selectedNhom === 'Điểm chính') return gv.diemChinh;
+               if (selectedNhom === 'Chi bộ')     return gv.chiBo;
+               return true;
+            });
+         }
+         
+         // Xây dựng CSV
+         const BOM = '\uFEFF'; // UTF-8 BOM để Excel đọc được tiếng Việt
+         const rows = [['Mã GV', 'Họ và Tên', 'Tổ chuyên môn', 'Trạng thái', 'Ghi chú', 'Thiết bị']];
+         
+         allTeachers.forEach(gv => {
+            const id = gv.maGV || gv.hoTen;
+            const att = attendanceMap[id];
+            const tt  = att ? att.trangThai : 'Chưa thao tác';
+            const gc  = att ? (att.ghiChu || '') : '';
+            const dev = att ? (att.deviceId || '') : '';
+            rows.push([gv.maGV || '', gv.hoTen || '', gv.toChuyenMon || '', tt, gc, dev]);
+         });
+         
+         const csvContent = BOM + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+         
+         // Tạo và kích hoạt tải file
+         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+         const url  = URL.createObjectURL(blob);
+         const link = document.createElement('a');
+         const safeName = meetingName.replace(/[/\\?%*:|"<>]/g, '-');
+         link.href = url;
+         link.download = `DiemDanh_${safeName}.csv`;
+         document.body.appendChild(link);
+         link.click();
+         document.body.removeChild(link);
+         URL.revokeObjectURL(url);
+         
+         App.showToast(`Đã xuất file: DiemDanh_${safeName}.csv`, "success");
       },
 
       copyReport: () => {

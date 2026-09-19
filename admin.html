@@ -451,7 +451,13 @@
         }
         
         if (selectedDashNhom !== 'all') {
-           allTeachers = allTeachers.filter(gv => gv.nhomPhu && gv.nhomPhu.split(',').map(s=>s.trim()).includes(selectedDashNhom));
+           allTeachers = allTeachers.filter(gv => {
+              if (selectedDashNhom === 'Phân hiệu') return gv.phanHieu;
+              if (selectedDashNhom === 'Trung tâm')  return gv.trungTam;
+              if (selectedDashNhom === 'Điểm chính') return gv.diemChinh;
+              if (selectedDashNhom === 'Chi bộ')     return gv.chiBo;
+              return true;
+           });
         }
 
         const attendanceMap = App.state.diemDanh || {}; 
@@ -856,22 +862,17 @@
           const dashFilterTo = document.getElementById('dash-filter-to');
           if (dashFilterTo) dashFilterTo.innerHTML = dashOpts;
 
-          // Đổ dữ liệu vào Dropdown Nhóm phụ
-          let nhomPhuSet = new Set();
-          App.state.giaoVien.forEach(gv => {
-              if (gv.nhomPhu) {
-                  gv.nhomPhu.split(',').forEach(tag => {
-                      const t = tag.trim();
-                      if (t.length > 0) nhomPhuSet.add(t);
-                  });
-              }
-          });
-          let dashNhomOpts = `<option value="all">-- Lọc theo Cơ sở / Nhóm --</option>`;
-          Array.from(nhomPhuSet).sort().forEach(nhom => {
-             dashNhomOpts += `<option value="${App.escapeHtml(nhom)}">${App.escapeHtml(nhom)}</option>`;
-          });
+          // Dropdown Nhóm phụ - cố định 4 giá trị
           const dashFilterNhom = document.getElementById('dash-filter-nhom');
-          if (dashFilterNhom) dashFilterNhom.innerHTML = dashNhomOpts;
+          if (dashFilterNhom) {
+            dashFilterNhom.innerHTML = `
+              <option value="all">-- Lọc theo Cơ sở / Nhóm --</option>
+              <option value="Phân hiệu">Phân hiệu</option>
+              <option value="Trung tâm">Trung tâm</option>
+              <option value="Điểm chính">Điểm chính</option>
+              <option value="Chi bộ">Chi bộ</option>
+            `;
+          }
 
           // Lấy danh sách lịch sử cuộc họp
           await App.loadHistory();

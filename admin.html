@@ -12,6 +12,9 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- HTML2PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <style>
     body { background-color: #f8fafc; }
@@ -87,8 +90,11 @@
       <div class="flex items-center justify-between mb-4 border-b pb-3">
         <h2 class="text-lg font-bold text-blue-800 uppercase tracking-wider"><i class="fas fa-chart-pie mr-2"></i>Thống Kê Sĩ Số</h2>
         <div class="flex items-center space-x-2">
+          <button onclick="App.exportPDF()" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center" title="Xuất file PDF">
+            <i class="fas fa-file-pdf mr-1"></i> Xuất PDF
+          </button>
           <button onclick="App.exportCSV()" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center" title="Xuất file CSV">
-            <i class="fas fa-file-csv mr-1"></i> Xuất
+            <i class="fas fa-file-csv mr-1"></i> Xuất CSV
           </button>
           <button id="btn-refresh-dash" onclick="App.refreshDashboard(this)" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center">
             <i class="fas fa-sync-alt mr-1"></i> Làm mới
@@ -795,6 +801,37 @@
          URL.revokeObjectURL(url);
          
          App.showToast(`Đã xuất file: DiemDanh_${safeName}.csv`, "success");
+      },
+
+      exportPDF: () => {
+         const selectEl = document.getElementById('dash-history-select');
+         const meetingName = selectEl?.options[selectEl.selectedIndex]?.text || 'diemdanh';
+         const safeName = meetingName.replace(/[/\\?%*:|"<>]/g, '-');
+         
+         const element = document.getElementById('view-dashboard');
+         
+         // Ẩn tạm thời các nút để PDF trông sạch sẽ
+         const actionButtons = element.querySelector('.flex.items-center.space-x-2');
+         if(actionButtons) actionButtons.style.display = 'none';
+         
+         const opt = {
+            margin:       0.3,
+            filename:     `BaoCao_${safeName}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+         };
+         
+         App.showToast("Đang tạo file PDF, vui lòng chờ...", "info");
+         
+         html2pdf().set(opt).from(element).save().then(() => {
+            // Hiển thị lại các nút
+            if(actionButtons) actionButtons.style.display = 'flex';
+            App.showToast(`Đã xuất file: BaoCao_${safeName}.pdf`, "success");
+         }).catch(err => {
+            if(actionButtons) actionButtons.style.display = 'flex';
+            App.showToast("Lỗi khi tạo PDF: " + err.message, "error");
+         });
       },
 
       copyReport: () => {

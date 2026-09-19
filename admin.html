@@ -476,11 +476,15 @@
            const isExempt = gv.ghiChu && gv.ghiChu.toString().trim() !== "";
            
            if (attendanceMap[id]) {
+              const tt = attendanceMap[id].trangThai;
+              
+              // Bỏ qua hoàn toàn những người được Miễn họp - không đếm vào tổng
+              if (tt === "Miễn họp") return;
+              
               expectedTotal++;
               if (!toCountMap[to]) toCountMap[to] = 0;
               toCountMap[to]++;
               
-              const tt = attendanceMap[id].trangThai;
               if (tt === "Có mặt") {
                  presentCount++;
               } else {
@@ -544,6 +548,7 @@
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Có mặt',this)" title="Điểm danh hộ: Có mặt" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">✅</button>
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Đi trễ',this)" title="Điểm danh hộ: Đi trễ" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">⏰</button>
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Vắng phép',this)" title="Điểm danh hộ: Vắng phép" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">📄</button>
+                       <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Miễn họp',this)" title="Miễn cuộc họp này" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">🚫</button>
                      </div>`
                  }
                </div>

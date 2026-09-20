@@ -1331,9 +1331,37 @@
          
          const safeTuNgay = tuNgay.replace(/\//g, '-');
          const safeDenNgay = denNgay.replace(/\//g, '-');
+         
+         let fileNamePostfix = `${safeTuNgay}_${safeDenNgay}`;
+         const quickSelect = document.getElementById('quick-date-select');
+         if (quickSelect && quickSelect.value !== 'custom') {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1;
+            const currentQ = Math.floor(today.getMonth() / 3) + 1;
+            
+            if (quickSelect.value === 'this_month') {
+               fileNamePostfix = `Thang${month}_${year}`;
+            } else if (quickSelect.value === 'last_month') {
+               let m = month - 1;
+               let y = year;
+               if (m === 0) { m = 12; y = year - 1; }
+               fileNamePostfix = `Thang${m}_${y}`;
+            } else if (quickSelect.value === 'this_quarter') {
+               fileNamePostfix = `Quy${currentQ}_${year}`;
+            } else if (quickSelect.value === 'last_quarter') {
+               let q = currentQ - 1;
+               let y = year;
+               if (q === 0) { q = 4; y = year - 1; }
+               fileNamePostfix = `Quy${q}_${y}`;
+            } else if (quickSelect.value === 'this_year') {
+               fileNamePostfix = `Nam_${year}`;
+            }
+         }
+         
          const opt = {
             margin:       [0.5, 0.3, 0.5, 0.3], 
-            filename:     `BaoCao_TongHop_${safeTuNgay}_${safeDenNgay}.pdf`,
+            filename:     `BaoCao_TongHop_${fileNamePostfix}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },

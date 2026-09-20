@@ -363,7 +363,7 @@
   <script>
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
-    const API_URL = "https://script.google.com/macros/s/AKfycbxmn8Tq8rC1D4dAxAPrifmT00HVhIGLUJswEfWeydFJGBrHc3ysnxW7uVEymMBLeANg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwC1Ey9Wb0x_c_Ey93TeNRuGTD_BMoVxWQT1fCGg6UBo2w3y0MLR2_xudwLU5yx3q2I/exec";
     
     // ==========================================
     // FIREBASE CONFIG
@@ -1525,7 +1525,7 @@
             App.state.teachingData = res || {};
             App.renderTeachingList();
          } catch(e) {
-            App.showToast("Lỗi tải dữ liệu giảng dạy!", "error");
+            App.showToast("Lỗi tải dữ liệu: " + e.message, "error");
          } finally {
             if(btn) btn.innerHTML = `<i class="fas fa-sync-alt mr-1"></i> Làm mới`;
          }
@@ -1645,9 +1645,10 @@
             App.showToast(res.message || "Đã cập nhật giảng dạy!", "success");
             const selectAllChk = document.getElementById('chk-teach-all');
             if (selectAllChk) selectAllChk.checked = false;
-            App.fetchTeaching();
+            await App.fetchTeaching();
          } catch(e) {
-            App.showToast(e.message || "Lỗi khi cập nhật giảng dạy!", "error");
+            App.showToast("Lỗi cập nhật: " + e.message, "error");
+         } finally {
             btns.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
             btnEl.innerHTML = originalHtml;
          }

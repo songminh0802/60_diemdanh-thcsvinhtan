@@ -1273,7 +1273,7 @@
          
          const opt = {
             margin:       [0.5, 0.3, 0.5, 0.3], 
-            filename:     `BaoCao_TongHop_${tuNgay.replace(/\\//g,'-')}_${denNgay.replace(/\\//g,'-')}.pdf`,
+            filename:     `BaoCao_TongHop_${tuNgay.replace(/\\//g,'-')}_${denNgay.replace(/\\//g,'-')}.pdf`.replace(/\//g, '-'),
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },

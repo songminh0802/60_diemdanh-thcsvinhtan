@@ -1271,13 +1271,15 @@
          const originalClasses = element.className;
          element.className = 'bg-white p-5 w-full max-w-[800px] mx-auto text-black'; 
          
+         const safeTuNgay = tuNgay.replace(/\//g, '-');
+         const safeDenNgay = denNgay.replace(/\//g, '-');
          const opt = {
             margin:       [0.5, 0.3, 0.5, 0.3], 
-            filename:     `BaoCao_TongHop_${tuNgay.replace(/\\//g,'-')}_${denNgay.replace(/\\//g,'-')}.pdf`.replace(/\//g, '-'),
+            filename:     `BaoCao_TongHop_${safeTuNgay}_${safeDenNgay}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
             jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['css', 'legacy'] }
+            pagebreak:    { mode: ['css'], avoid: 'tr' }
          };
          
          App.showToast("Đang tạo file PDF, vui lòng chờ...", "info");

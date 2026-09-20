@@ -506,6 +506,34 @@
         let toCountMap = {}; 
         let expectedTotal = 0;
         
+         const selectEl = document.getElementById('dash-history-select');
+         const maCuocHop = selectEl ? selectEl.value : 'current';
+         let meetingTime = 0;
+         
+         if (maCuocHop !== 'current') {
+            const dateMatch = maCuocHop.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+            if (dateMatch) {
+               meetingTime = new Date(dateMatch[3], dateMatch[2] - 1, dateMatch[1]).getTime();
+            }
+         } else {
+            const dateVal = document.getElementById('inp-date')?.value;
+            if (dateVal) {
+               meetingTime = new Date(dateVal).getTime();
+            } else {
+               const today = new Date();
+               today.setHours(0,0,0,0);
+               meetingTime = today.getTime();
+            }
+         }
+         
+         // Bỏ qua những giáo viên chưa vào làm tại thời điểm diễn ra cuộc họp
+         if (meetingTime > 0) {
+            allTeachers = allTeachers.filter(gv => {
+               if (gv.ngayVaoLam && gv.ngayVaoLam > meetingTime) return false;
+               return true;
+            });
+         }
+
         allTeachers.forEach(gv => {
            const id = gv.maGV || gv.hoTen;
            const ten = gv.hoTen || "Không rõ";
@@ -777,6 +805,25 @@
          }
          
          const selectEl = document.getElementById('dash-history-select');
+         const maCuocHop = selectEl ? selectEl.value : 'current';
+         let meetingTime = 0;
+         
+         if (maCuocHop !== 'current') {
+            const dateMatch = maCuocHop.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+            if (dateMatch) {
+               meetingTime = new Date(dateMatch[3], dateMatch[2] - 1, dateMatch[1]).getTime();
+            }
+         } else {
+            const dateVal = document.getElementById('inp-date')?.value;
+            if (dateVal) {
+               meetingTime = new Date(dateVal).getTime();
+            } else {
+               const today = new Date();
+               today.setHours(0,0,0,0);
+               meetingTime = today.getTime();
+            }
+         }
+         
          const selectedTo   = document.getElementById('dash-filter-to')?.value || 'all';
          const selectedNhom = document.getElementById('dash-filter-nhom')?.value || 'all';
          const meetingName  = selectEl?.options[selectEl.selectedIndex]?.text || 'diemdanh';
@@ -790,6 +837,13 @@
                if (selectedNhom === 'Trung tâm')  return gv.trungTam;
                if (selectedNhom === 'Điểm chính') return gv.diemChinh;
                if (selectedNhom === 'Chi bộ')     return gv.chiBo;
+               return true;
+            });
+         }
+         
+         if (meetingTime > 0) {
+            allTeachers = allTeachers.filter(gv => {
+               if (gv.ngayVaoLam && gv.ngayVaoLam > meetingTime) return false;
                return true;
             });
          }

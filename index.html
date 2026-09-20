@@ -78,7 +78,10 @@
     </div>
 
     <!-- Bước 2: Form Tự Điểm Danh -->
-    <div id="self-service-form" class="bg-white rounded-xl shadow-lg border border-gray-200 p-5 flex-1 mb-6 flex flex-col">
+    <div id="self-service-form" class="bg-white rounded-xl shadow-lg border border-gray-200 p-5 flex-1 mb-6 flex flex-col opacity-50 pointer-events-none transition-opacity duration-300 relative">
+      <div id="form-lock-msg" class="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-xl pb-10">
+         <div class="text-sm font-bold text-gray-500 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200"><i class="fas fa-lock mr-2"></i>Vui lòng chọn Ngày và Loại họp trước</div>
+      </div>
       <h2 class="text-lg font-bold text-blue-700 mb-5 border-b pb-2"><i class="fas fa-user-check mr-2"></i>Chọn tên của bạn</h2>
       
       <div class="space-y-4 mb-6">
@@ -323,7 +326,7 @@
         const todayStr = `${yyyy}-${mm}-${dd}`;
         
         const dateInp = document.getElementById('inp-date');
-        dateInp.value = todayStr;
+        dateInp.value = ''; // Yêu cầu người dùng tự chọn
         dateInp.max = todayStr; // Ngăn chọn ngày trong tương lai
         
         App.setLoadingState(true);
@@ -354,8 +357,8 @@
           });
           selTo.innerHTML = opts;
           
-          // Lấy dữ liệu điểm danh ngày hiện tại
-          await App.loadAttendanceData();
+          // Kiểm tra và load dữ liệu nếu đã chọn đủ (thường lúc init chưa chọn đủ)
+          App.reloadAttendance();
 
         } catch (error) {
           App.showToast("Không thể tải dữ liệu. Vui lòng thử lại.", 'error');
@@ -423,6 +426,20 @@
       },
 
       reloadAttendance: async () => {
+        const dateVal = document.getElementById('inp-date').value;
+        const loaiVal = document.getElementById('inp-loai').value;
+        const formEl = document.getElementById('self-service-form');
+        const lockMsg = document.getElementById('form-lock-msg');
+        
+        if (!dateVal || !loaiVal) {
+           formEl.classList.add('opacity-50', 'pointer-events-none');
+           if (lockMsg) lockMsg.style.display = 'flex';
+           return;
+        }
+        
+        formEl.classList.remove('opacity-50', 'pointer-events-none');
+        if (lockMsg) lockMsg.style.display = 'none';
+
         App.setLoadingState(true);
         try {
           await App.loadAttendanceData();

@@ -365,7 +365,7 @@
         </button>
       </div>
       
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
          <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Ngày dạy</label>
             <input type="date" id="teach-date" onchange="App.fetchTeaching()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
@@ -375,6 +375,15 @@
             <select id="teach-shift" onchange="App.fetchTeaching()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 text-gray-700 font-semibold cursor-pointer">
                <option value="Sáng">Sáng</option>
                <option value="Chiều">Chiều</option>
+               <option value="Cả ngày">Cả ngày</option>
+            </select>
+         </div>
+         <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Người cập nhật</label>
+            <select id="teach-updater" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 text-gray-700 font-semibold cursor-pointer">
+               <option value="Admin">Admin</option>
+               <option value="Thầy Quang">Thầy Quang</option>
+               <option value="Thầy Duy">Thầy Duy</option>
             </select>
          </div>
       </div>
@@ -1810,6 +1819,7 @@
          
          const dateInput = document.getElementById('teach-date').value;
          const shiftInput = document.getElementById('teach-shift').value;
+         const updaterInput = document.getElementById('teach-updater').value;
          
          if (!confirm(`Xác nhận đánh dấu "${trangThai}" cho ${checked.length} giáo viên vào Buổi ${shiftInput} ngày ${dateInput}?`)) return;
          
@@ -1828,7 +1838,7 @@
          
          try {
             const res = await App.fetchAPI('capNhatDiemDanhGiangDayBulk', 'POST', {
-               data: { ngayDay: dateInput, buoi: shiftInput, trangThai, danhSach }
+               data: { ngayDay: dateInput, buoi: shiftInput, trangThai, danhSach, nguoiCapNhat: updaterInput }
             });
             App.showToast(res.message || "Đã cập nhật giảng dạy!", "success");
             const selectAllChk = document.getElementById('chk-teach-all');

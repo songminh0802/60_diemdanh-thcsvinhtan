@@ -1770,6 +1770,7 @@
                     data-hoten="${App.escapeHtml(gv.hoTen)}" 
                     data-to="${App.escapeHtml(gv.toChuyenMon)}"
                     onchange="App.updateTeachBulkBar()">
+                  <input type="text" class="teach-lydo w-28 sm:w-40 mr-3 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-indigo-500 placeholder-gray-400" placeholder="Lý do..." value="${App.escapeHtml(ghiChu)}">
                   <div class="flex-1 min-w-0">
                      <span class="font-bold text-gray-700">${App.escapeHtml(gv.hoTen)}</span> 
                      <span class="text-xs text-gray-400">(${App.escapeHtml(gv.toChuyenMon)})</span>
@@ -1823,11 +1824,16 @@
          
          if (!confirm(`Xác nhận đánh dấu "${trangThai}" cho ${checked.length} giáo viên vào Buổi ${shiftInput} ngày ${dateInput}?`)) return;
          
-         const danhSach = Array.from(checked).map(chk => ({
-            maGV: chk.dataset.magv,
-            hoTen: chk.dataset.hoten,
-            toChuyenMon: chk.dataset.to
-         }));
+         const danhSach = Array.from(checked).map(chk => {
+            const row = chk.closest('.border-b');
+            const inputLyDo = row ? row.querySelector('.teach-lydo') : null;
+            return {
+               maGV: chk.dataset.magv,
+               hoTen: chk.dataset.hoten,
+               toChuyenMon: chk.dataset.to,
+               ghiChu: inputLyDo ? inputLyDo.value.trim() : ""
+            };
+         });
          
          const bar = document.getElementById('teach-bulk-bar');
          const btns = bar ? bar.querySelectorAll('button') : [];

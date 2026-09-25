@@ -347,10 +347,11 @@
                      <th class="px-4 py-3 text-center">Tổ</th>
                      <th class="px-4 py-3 text-center">Vi Phạm</th>
                      <th class="px-4 py-3">Ghi Chú</th>
+                     <th class="px-4 py-3">Người Cập Nhật</th>
                   </tr>
                </thead>
                <tbody id="rep-giangday-body">
-                  <tr><td colspan="6" class="px-4 py-4 text-center text-gray-400 italic">Nhấn "Xem Báo Cáo" để tải dữ liệu</td></tr>
+                  <tr><td colspan="7" class="px-4 py-4 text-center text-gray-400 italic">Nhấn "Xem Báo Cáo" để tải dữ liệu</td></tr>
                </tbody>
             </table>
          </div>
@@ -1410,7 +1411,7 @@
          const tomTat  = Array.isArray(rawData) ? [] : (rawData.tomTat || []);
          
          if (chiTiet.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center text-gray-500">Không có vi phạm giảng dạy nào trong giai đoạn này.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-4 text-center text-gray-500">Không có vi phạm giảng dạy nào trong giai đoạn này.</td></tr>`;
             summaryBody.innerHTML = `<tr><td colspan="8" class="px-4 py-4 text-center text-gray-500">Không có dữ liệu.</td></tr>`;
             return;
          }
@@ -1452,6 +1453,7 @@
                   <td class="px-4 py-2 text-center text-xs text-gray-500">${App.escapeHtml(item.toChuyenMon)}</td>
                   <td class="px-4 py-2 text-center ${ttClass}">${App.escapeHtml(item.trangThai)}</td>
                   <td class="px-4 py-2 text-xs text-gray-500">${App.escapeHtml(item.ghiChu || '')}</td>
+                  <td class="px-4 py-2 text-xs font-semibold text-indigo-600">${App.escapeHtml(item.nguoiCapNhat || '')}</td>
                </tr>
             `;
          });

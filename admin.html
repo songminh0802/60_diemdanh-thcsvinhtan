@@ -1445,9 +1445,10 @@
             else if (item.trangThai === 'Bỏ tiết') ttClass = 'text-orange-600 font-bold';
             else if (item.trangThai === 'Công tác') ttClass = 'text-teal-600 font-bold';
             
+            const fDate = item.ngayDay.includes('-') ? item.ngayDay.split('-').reverse().join('/') : item.ngayDay;
             html += `
                <tr class="border-b border-gray-100 hover:bg-orange-50 transition-colors">
-                  <td class="px-4 py-2 font-semibold text-gray-700">${App.escapeHtml(item.ngayDay)}</td>
+                  <td class="px-4 py-2 font-semibold text-gray-700">${App.escapeHtml(fDate)}</td>
                   <td class="px-4 py-2 text-center text-xs text-gray-500 font-bold">${App.escapeHtml(item.buoi)}</td>
                   <td class="px-4 py-2 font-bold">${App.escapeHtml(item.hoTen)}</td>
                   <td class="px-4 py-2 text-center text-xs text-gray-500">${App.escapeHtml(item.toChuyenMon)}</td>
@@ -1577,7 +1578,8 @@
                  text += `\n` + `-`.repeat(40) + `\n`;
                  text += `CHI TIẾT TỮNG LƯỢT VI PHẠM (${chiTiet.length} lượt):\n`;
                  chiTiet.forEach(item => {
-                    text += `- ${item.ngayDay} Buổi ${item.buoi}: ${item.hoTen} (${item.toChuyenMon}) - ${item.trangThai}`;
+                    const fDate = item.ngayDay.includes('-') ? item.ngayDay.split('-').reverse().join('/') : item.ngayDay;
+                    text += `- ${fDate} Buổi ${item.buoi}: ${item.hoTen} (${item.toChuyenMon}) - ${item.trangThai}`;
                     if (item.ghiChu) text += ` [${item.ghiChu}]`;
                     text += "\n";
                  });

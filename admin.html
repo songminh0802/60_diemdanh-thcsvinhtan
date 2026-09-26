@@ -901,6 +901,7 @@
             if (btnRefresh) App.refreshDashboard(btnRefresh);
          } catch(e) {
             App.showToast(e.message || "Lỗi khi điểm danh hộ hàng loạt!", "error");
+         } finally {
             btns.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
             btnEl.innerHTML = originalHtml;
          }
@@ -933,6 +934,7 @@
             if (btnRefresh) App.refreshDashboard(btnRefresh);
          } catch(e) {
             App.showToast(e.message || "Lỗi khi điểm danh hộ!", "error");
+         } finally {
             btns.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
             btnEl.innerHTML = originalHtml;
          }

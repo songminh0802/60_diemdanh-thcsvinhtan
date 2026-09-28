@@ -240,6 +240,10 @@
             <input type="radio" name="report_type" value="giangday" onchange="App.toggleReportType()" class="text-indigo-600 focus:ring-indigo-500">
             <span>Báo cáo Giảng dạy</span>
          </label>
+         <label class="flex items-center space-x-2 text-sm font-bold text-gray-700 cursor-pointer">
+            <input type="radio" name="report_type" value="tiendo" onchange="App.toggleReportType()" class="text-orange-600 focus:ring-orange-500">
+            <span>Báo cáo Tiến độ</span>
+         </label>
       </div>
       
       <div class="mb-4">
@@ -355,6 +359,53 @@
                </thead>
                <tbody id="rep-giangday-body">
                   <tr><td colspan="7" class="px-4 py-4 text-center text-gray-400 italic">Nhấn "Xem Báo Cáo" để tải dữ liệu</td></tr>
+               </tbody>
+            </table>
+         </div>
+      </div>
+      
+      <div id="rep-tiendo-container" class="hidden">
+         <!-- Tóm tắt Tiến độ -->
+         <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg flex justify-between items-center mt-6">
+            <div><i class="fas fa-chart-bar text-orange-500 mr-2"></i> Tóm tắt Tiến độ Giáo viên</div>
+         </h3>
+         <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200 mb-6">
+            <table class="min-w-full bg-white text-sm">
+               <thead class="bg-orange-100 text-orange-800 border-b border-orange-200">
+                  <tr>
+                     <th class="px-4 py-3 text-left">Họ Tên GV</th>
+                     <th class="px-4 py-3 text-center">Tổ</th>
+                     <th class="px-4 py-3 text-center">Tổng Việc</th>
+                     <th class="px-4 py-3 text-center text-green-700">Hoàn thành</th>
+                     <th class="px-4 py-3 text-center text-red-700">Chưa làm</th>
+                     <th class="px-4 py-3 text-center text-orange-700">Chưa nộp</th>
+                     <th class="px-4 py-3 text-center text-yellow-700">Trễ hạn</th>
+                     <th class="px-4 py-3 text-center text-gray-500">Miễn</th>
+                  </tr>
+               </thead>
+               <tbody id="rep-tiendo-summary-body">
+                  <tr><td colspan="8" class="px-4 py-4 text-center text-gray-400 italic">Nhấn "Xem Báo Cáo" để tải dữ liệu</td></tr>
+               </tbody>
+            </table>
+         </div>
+
+         <!-- Chi tiết chưa hoàn thành / trễ hạn -->
+         <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg mt-6">
+            <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i> Chi tiết Công việc Chưa làm / Trễ hạn
+         </h3>
+         <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+            <table class="min-w-full bg-white text-sm">
+               <thead class="bg-orange-50 text-orange-700 border-b border-orange-100">
+                  <tr>
+                     <th class="px-4 py-3 text-left w-28">Ngày Giao</th>
+                     <th class="px-4 py-3 text-left">Công Việc</th>
+                     <th class="px-4 py-3 text-left">Giáo Viên</th>
+                     <th class="px-4 py-3 text-center">Trạng Thái</th>
+                     <th class="px-4 py-3 text-left">Ghi Chú</th>
+                  </tr>
+               </thead>
+               <tbody id="rep-tiendo-details-body">
+                  <tr><td colspan="5" class="px-4 py-4 text-center text-gray-400 italic">Nhấn "Xem Báo Cáo" để tải dữ liệu</td></tr>
                </tbody>
             </table>
          </div>
@@ -1428,16 +1479,26 @@
 
       toggleReportType: () => {
          const type = document.querySelector('input[name="report_type"]:checked').value;
+         const cuochopContainer = document.getElementById('rep-cuochop-container');
+         const giangdayContainer = document.getElementById('rep-giangday-container');
+         const tiendoContainer = document.getElementById('rep-tiendo-container');
+         
+         cuochopContainer.classList.add('hidden');
+         giangdayContainer.classList.add('hidden');
+         if(tiendoContainer) tiendoContainer.classList.add('hidden');
+
          if (type === 'cuochop') {
-            document.getElementById('rep-cuochop-container').classList.remove('hidden');
-            document.getElementById('rep-giangday-container').classList.add('hidden');
-         } else {
-            document.getElementById('rep-cuochop-container').classList.add('hidden');
-            document.getElementById('rep-giangday-container').classList.remove('hidden');
+            cuochopContainer.classList.remove('hidden');
+         } else if (type === 'giangday') {
+            giangdayContainer.classList.remove('hidden');
+         } else if (type === 'tiendo') {
+            if(tiendoContainer) tiendoContainer.classList.remove('hidden');
          }
+         
          App.state.reportData = []; // clear old data
          App.renderReport();
          App.renderReportGiangDay();
+         if(App.renderReportTienDo) App.renderReportTienDo();
       },
 
       fetchReport: async (btnEl) => {
@@ -1460,15 +1521,19 @@
          btnEl.classList.add('opacity-70');
          
          const type = document.querySelector('input[name="report_type"]:checked').value;
-         const apiName = type === 'cuochop' ? 'getThongKeGiaiDoan' : 'getThongKeGiangDay';
+         let apiName = 'getThongKeGiaiDoan';
+         if (type === 'giangday') apiName = 'getThongKeGiangDay';
+         else if (type === 'tiendo') apiName = 'getBaoCaoTienDo';
          
          try {
             const res = await App.fetchAPI(apiName, 'POST', { data: { tuNgay, denNgay } });
             App.state.reportData = res;
             if (type === 'cuochop') {
                App.renderReport();
-            } else {
+            } else if (type === 'giangday') {
                App.renderReportGiangDay();
+            } else if (type === 'tiendo') {
+               if(App.renderReportTienDo) App.renderReportTienDo();
             }
             App.showToast("Đã tải xong báo cáo!", "success");
          } catch (e) {
@@ -1586,6 +1651,87 @@
          detailsList.innerHTML = detailsHtml || `<div class="text-gray-400 italic">Không có ai vi phạm đi trễ/vắng.</div>`;
       },
 
+      renderReportTienDo: () => {
+         const tbodySum = document.getElementById('rep-tiendo-summary-body');
+         const tbodyDetails = document.getElementById('rep-tiendo-details-body');
+         const data = App.state.reportData || [];
+         
+         if (data.length === 0) {
+            if(tbodySum) tbodySum.innerHTML = `<tr><td colspan="8" class="px-4 py-4 text-center text-gray-500">Không có dữ liệu trong khoảng thời gian này.</td></tr>`;
+            if(tbodyDetails) tbodyDetails.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center text-gray-500">Chưa có dữ liệu.</td></tr>`;
+            return;
+         }
+         
+         const sumMap = {};
+         const detailsHtmlArr = [];
+         
+         data.forEach(item => {
+            const mgv = item.maGV;
+            if (!sumMap[mgv]) {
+               sumMap[mgv] = {
+                  hoTen: item.hoTen,
+                  toChuyenMon: item.toChuyenMon,
+                  tong: 0,
+                  hoanThanh: 0,
+                  chuaLam: 0,
+                  chuaNop: 0,
+                  treHan: 0,
+                  mien: 0
+               };
+            }
+            sumMap[mgv].tong++;
+            if (item.trangThai === 'Hoàn thành') sumMap[mgv].hoanThanh++;
+            else if (item.trangThai === 'Chưa làm') sumMap[mgv].chuaLam++;
+            else if (item.trangThai === 'Chưa nộp') sumMap[mgv].chuaNop++;
+            else if (item.trangThai === 'Trễ hạn') sumMap[mgv].treHan++;
+            else if (item.trangThai === 'Miễn') sumMap[mgv].mien++;
+            
+            if (item.trangThai === 'Chưa làm' || item.trangThai === 'Chưa nộp' || item.trangThai === 'Trễ hạn') {
+               let ttClass = 'text-gray-600';
+               if (item.trangThai === 'Chưa làm') ttClass = 'text-red-600 font-bold';
+               else if (item.trangThai === 'Chưa nộp') ttClass = 'text-orange-600 font-bold';
+               else if (item.trangThai === 'Trễ hạn') ttClass = 'text-yellow-600 font-bold';
+               
+               detailsHtmlArr.push(`
+                  <tr class="border-b border-gray-100 hover:bg-orange-50">
+                     <td class="px-4 py-2 font-semibold text-gray-700">${App.escapeHtml(item.ngayGiao)}</td>
+                     <td class="px-4 py-2 font-bold">${App.escapeHtml(item.tenCongViec)}</td>
+                     <td class="px-4 py-2 font-bold">${App.escapeHtml(item.hoTen)} <span class="text-xs text-gray-400">(${App.escapeHtml(item.toChuyenMon)})</span></td>
+                     <td class="px-4 py-2 text-center ${ttClass}">${App.escapeHtml(item.trangThai)}</td>
+                     <td class="px-4 py-2 text-xs text-gray-500">${App.escapeHtml(item.ghiChu || '')}</td>
+                  </tr>
+               `);
+            }
+         });
+         
+         const sumList = Object.values(sumMap).sort((a,b) => {
+            const errA = a.chuaLam + a.chuaNop + a.treHan;
+            const errB = b.chuaLam + b.chuaNop + b.treHan;
+            return errB - errA;
+         });
+         
+         let sumHtml = '';
+         sumList.forEach(item => {
+            const errCount = item.chuaLam + item.chuaNop + item.treHan;
+            const rowBg = errCount > 0 ? 'bg-orange-50' : 'hover:bg-gray-50';
+            sumHtml += `
+               <tr class="border-b border-gray-100 ${rowBg}">
+                  <td class="px-4 py-2 font-bold text-gray-800">${App.escapeHtml(item.hoTen)}</td>
+                  <td class="px-4 py-2 text-center text-xs text-gray-500">${App.escapeHtml(item.toChuyenMon)}</td>
+                  <td class="px-4 py-2 text-center font-black text-gray-900">${item.tong}</td>
+                  <td class="px-4 py-2 text-center font-semibold ${item.hoanThanh > 0 ? 'text-green-600' : 'text-gray-300'}">${item.hoanThanh || '-'}</td>
+                  <td class="px-4 py-2 text-center font-semibold ${item.chuaLam > 0 ? 'text-red-600' : 'text-gray-300'}">${item.chuaLam || '-'}</td>
+                  <td class="px-4 py-2 text-center font-semibold ${item.chuaNop > 0 ? 'text-orange-600' : 'text-gray-300'}">${item.chuaNop || '-'}</td>
+                  <td class="px-4 py-2 text-center font-semibold ${item.treHan > 0 ? 'text-yellow-600' : 'text-gray-300'}">${item.treHan || '-'}</td>
+                  <td class="px-4 py-2 text-center font-semibold text-gray-400">${item.mien || '-'}</td>
+               </tr>
+            `;
+         });
+         
+         if(tbodySum) tbodySum.innerHTML = sumHtml || `<tr><td colspan="8" class="px-4 py-4 text-center text-gray-500">Không có dữ liệu.</td></tr>`;
+         if(tbodyDetails) tbodyDetails.innerHTML = detailsHtmlArr.length > 0 ? detailsHtmlArr.join('') : `<tr><td colspan="5" class="px-4 py-4 text-center text-green-600 italic font-bold">🎉 Tất cả giáo viên đều hoàn thành tốt nhiệm vụ!</td></tr>`;
+      },
+
       copyAggregateReport: () => {
          const rawReportData = App.state.reportData;
          // Kiểm tra rỗng: hỗ trợ cả array cũ lẫn object mới {chiTiet, tomTat}
@@ -1662,6 +1808,37 @@
                     if (item.ghiChu) text += ` [${item.ghiChu}]`;
                     text += "\n";
                  });
+             }
+         } else if (type === 'tiendo') {
+             const dataTienDo = App.state.reportData || [];
+             text = `⚠️ THÔNG BÁO NHẮC NHỞ TIẾN ĐỘ (${tuNgay} đến ${denNgay}) ⚠️\n\n`;
+             
+             const taskMap = {};
+             let countErr = 0;
+             dataTienDo.forEach(item => {
+                 if (item.trangThai === 'Chưa làm' || item.trangThai === 'Chưa nộp' || item.trangThai === 'Trễ hạn') {
+                     countErr++;
+                     if (!taskMap[item.tenCongViec]) {
+                         taskMap[item.tenCongViec] = { ngayGiao: item.ngayGiao, people: [] };
+                     }
+                     taskMap[item.tenCongViec].people.push(item);
+                 }
+             });
+             
+             if (countErr === 0) {
+                 text += "Tất cả giáo viên đều hoàn thành tiến độ xuất sắc!";
+             } else {
+                 let i = 1;
+                 for (const [taskName, taskObj] of Object.entries(taskMap)) {
+                     text += `${i}. ${taskName} (Giao/Hạn: ${taskObj.ngayGiao}):\n`;
+                     taskObj.people.forEach(p => {
+                         let note = p.ghiChu ? ` - ${p.ghiChu}` : '';
+                         text += `   - Thầy/Cô ${p.hoTen} (${p.toChuyenMon}) - ${p.trangThai}${note}\n`;
+                     });
+                     text += `\n`;
+                     i++;
+                 }
+                 text += `Mong các thầy cô nhanh chóng hoàn thành!`;
              }
          }
          

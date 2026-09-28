@@ -81,11 +81,11 @@
       <button onclick="App.switchTab('teaching')" id="tab-btn-teaching" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
         <i class="fas fa-chalkboard-teacher mr-1"></i> Lịch giảng dạy
       </button>
-      <button onclick="App.switchTab('report')" id="tab-btn-report" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
-        <i class="fas fa-calendar-alt mr-1"></i> Báo cáo tổng hợp
-      </button>
       <button onclick="App.switchTab('progress')" id="tab-btn-progress" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
         <i class="fas fa-tasks mr-1"></i> Tiến độ công việc
+      </button>
+      <button onclick="App.switchTab('report')" id="tab-btn-report" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
+        <i class="fas fa-calendar-alt mr-1"></i> Báo cáo tổng hợp
       </button>
     </div>
 
@@ -628,7 +628,7 @@
       // UI Utils
       // ----------------------------------------
       switchTab: (tabName) => {
-         ['dashboard', 'report', 'teaching', 'progress'].forEach(tab => {
+         ['dashboard', 'teaching', 'progress', 'report'].forEach(tab => {
             const btn = document.getElementById(`tab-btn-${tab}`);
             const view = document.getElementById(`view-${tab}`);
             if (!btn || !view) return;

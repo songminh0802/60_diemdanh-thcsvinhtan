@@ -84,6 +84,9 @@
       <button onclick="App.switchTab('report')" id="tab-btn-report" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
         <i class="fas fa-calendar-alt mr-1"></i> Báo cáo tổng hợp
       </button>
+      <button onclick="App.switchTab('progress')" id="tab-btn-progress" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-500 hover:bg-gray-100 transition-colors">
+        <i class="fas fa-tasks mr-1"></i> Tiến độ công việc
+      </button>
     </div>
 
     <!-- Giao diện Admin / Dashboard -->
@@ -430,6 +433,65 @@
       </div>
       
     </div>
+
+    <!-- Giao diện Tiến độ công việc -->
+    <div id="view-progress" class="hidden bg-white rounded-xl shadow-lg border border-orange-200 p-5 mb-8 flex-1 flex flex-col animate-fade-in">
+      <div class="flex items-center justify-between mb-4 border-b pb-3">
+        <h2 class="text-lg font-bold text-orange-800 uppercase tracking-wider"><i class="fas fa-tasks mr-2"></i>Tiến độ công việc</h2>
+        <button id="btn-refresh-progress" onclick="App.fetchProgress()" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center">
+          <i class="fas fa-sync-alt mr-1"></i> Làm mới
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+         <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Ngày / Hạn chót</label>
+            <input type="date" id="prog-date" onchange="App.fetchProgress()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50">
+         </div>
+         <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Tên công việc</label>
+            <input type="text" id="prog-task" onchange="App.fetchProgress()" placeholder="Nhập tên công việc (VD: Nộp giáo án)" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white">
+         </div>
+      </div>
+      
+      <!-- Bộ lọc tổ chuyên môn -->
+      <div class="mb-4">
+         <select id="prog-filter-to" onchange="App.renderProgressList()" class="w-full border-2 border-orange-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold bg-orange-50 text-orange-800 shadow-sm cursor-pointer hover:bg-orange-100 transition-colors">
+            <option value="all">-- Xem tất cả Tổ chuyên môn --</option>
+            <!-- Render từ JS -->
+         </select>
+      </div>
+      
+      <!-- Danh sách -->
+      <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg flex justify-between items-center">
+         <div><i class="fas fa-list text-orange-500 mr-2"></i> Danh sách Giáo viên</div>
+      </h3>
+      
+      <!-- Thanh chọn tất cả -->
+      <div id="prog-bulk-header" class="flex items-center justify-between mb-2 px-2">
+        <label class="flex items-center space-x-2 text-xs text-gray-500 cursor-pointer">
+          <input type="checkbox" id="chk-prog-all" onchange="App.toggleProgSelectAll(this.checked)" class="rounded">
+          <span>Chọn tất cả danh sách dưới đây</span>
+        </label>
+        <span id="prog-bulk-count" class="text-xs font-bold text-orange-600"></span>
+      </div>
+      
+      <div id="prog-list" class="space-y-1 mb-2">
+         <!-- Render từ JS -->
+      </div>
+      
+      <!-- Thanh hành động -->
+      <div id="prog-bulk-bar" class="hidden mb-4 bg-orange-50 border border-orange-200 rounded-xl p-3 sticky bottom-4 shadow-xl">
+        <div class="text-xs font-bold text-orange-700 mb-2">Đánh dấu tiến độ hàng loạt cho những người đã chọn:</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button onclick="App.updateProgressBulk('Hoàn thành',this)" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">✅ Hoàn thành</button>
+          <button onclick="App.updateProgressBulk('Chưa làm',this)" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">❌ Chưa làm</button>
+          <button onclick="App.updateProgressBulk('Trễ hạn',this)" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">⏰ Trễ hạn</button>
+          <button onclick="App.updateProgressBulk('Miễn',this)" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">🚫 Miễn</button>
+        </div>
+      </div>
+      
+    </div>
   </main>
 
   <!-- Toast Notification Container -->
@@ -555,6 +617,7 @@
         giaoVien: [],
         diemDanh: {}, // { "maGV": { trangThai, ghiChu } }
         teachingData: {}, // { "maGV": { trangThai, ghiChu } }
+        progressData: {}, // { "maGV": { trangThai, ghiChu } }
         toChuyenMon: new Set(),
         historyList: [], // Lưu danh sách các cuộc họp
         reportData: []
@@ -564,7 +627,7 @@
       // UI Utils
       // ----------------------------------------
       switchTab: (tabName) => {
-         ['dashboard', 'report', 'teaching'].forEach(tab => {
+         ['dashboard', 'report', 'teaching', 'progress'].forEach(tab => {
             const btn = document.getElementById(`tab-btn-${tab}`);
             const view = document.getElementById(`view-${tab}`);
             if (!btn || !view) return;
@@ -588,6 +651,19 @@
                const dd = String(today.getDate()).padStart(2, '0');
                dateInput.value = `${yyyy}-${mm}-${dd}`;
                App.fetchTeaching(); // auto fetch on first open
+            }
+         }
+
+         if (tabName === 'progress') {
+            const dateInput = document.getElementById('prog-date');
+            if (!dateInput.value) {
+               // Set today
+               const today = new Date();
+               const yyyy = today.getFullYear();
+               const mm = String(today.getMonth() + 1).padStart(2, '0');
+               const dd = String(today.getDate()).padStart(2, '0');
+               dateInput.value = `${yyyy}-${mm}-${dd}`;
+               App.fetchProgress(); // auto fetch on first open
             }
          }
       },
@@ -1869,6 +1945,162 @@
          }
       },
 
+      // ----------------------------------------
+      // Progress Logic
+      // ----------------------------------------
+      fetchProgress: async () => {
+         const dateInput = document.getElementById('prog-date').value;
+         const taskInput = document.getElementById('prog-task').value;
+         if (!dateInput || !taskInput) return;
+         
+         const btn = document.getElementById('btn-refresh-progress');
+         if(btn) btn.innerHTML = `<i class="fas fa-sync-alt fa-spin mr-1"></i>`;
+         
+         try {
+            const res = await App.fetchAPI('getTienDoCongViec', 'POST', { data: { ngay: dateInput, congViec: taskInput } });
+            App.state.progressData = res || {};
+            App.renderProgressList();
+         } catch(e) {
+            App.showToast("Lỗi tải dữ liệu: " + e.message, "error");
+         } finally {
+            if(btn) btn.innerHTML = `<i class="fas fa-sync-alt mr-1"></i> Làm mới`;
+         }
+      },
+
+      renderProgressList: () => {
+         let allTeachers = App.state.giaoVien || [];
+         const filterTo = document.getElementById('prog-filter-to') ? document.getElementById('prog-filter-to').value : 'all';
+         
+         if (filterTo !== 'all') {
+            allTeachers = allTeachers.filter(gv => gv.toChuyenMon === filterTo);
+         }
+         
+         const listEl = document.getElementById('prog-list');
+         if (!listEl) return;
+         
+         if (allTeachers.length === 0) {
+            listEl.innerHTML = `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu giáo viên.</div>`;
+            return;
+         }
+         
+         const progressData = App.state.progressData || {};
+         
+         let html = '';
+         allTeachers.forEach((gv, idx) => {
+            const pData = progressData[gv.maGV];
+            let tt = 'Chưa làm';
+            let ghiChu = '';
+            let ttClass = 'bg-gray-100 text-gray-500'; 
+            
+            if (pData) {
+               tt = pData.trangThai || 'Chưa làm';
+               ghiChu = pData.ghiChu || '';
+               if (tt === 'Hoàn thành') ttClass = 'bg-green-100 text-green-700';
+               else if (tt === 'Chưa làm') ttClass = 'bg-red-100 text-red-700';
+               else if (tt === 'Trễ hạn') ttClass = 'bg-yellow-100 text-yellow-700';
+               else if (tt === 'Miễn') ttClass = 'bg-gray-200 text-gray-700';
+            }
+            
+            html += `
+              <div class="p-2 border-b border-gray-100 last:border-0 text-sm flex items-center justify-between" data-idx="${idx}">
+                <div class="flex items-center gap-3">
+                  <input type="checkbox" class="prog-chk mr-2 rounded flex-shrink-0 text-orange-500 focus:ring-orange-500" 
+                    data-magv="${App.escapeHtml(gv.maGV)}" 
+                    data-hoten="${App.escapeHtml(gv.hoTen)}" 
+                    data-to="${App.escapeHtml(gv.toChuyenMon)}"
+                    onchange="App.updateProgBulkBar()">
+                  <input type="text" class="prog-ghichu w-28 sm:w-40 mr-3 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-500 placeholder-gray-400" placeholder="Ghi chú..." value="${App.escapeHtml(ghiChu)}">
+                  <div class="flex-1 min-w-0">
+                     <span class="font-bold text-gray-700">${App.escapeHtml(gv.hoTen)}</span> 
+                     <span class="text-xs text-gray-400">(${App.escapeHtml(gv.toChuyenMon)})</span>
+                  </div>
+                </div>
+                <div class="flex space-x-1 flex-shrink-0 ml-2 items-center">
+                  <span class="px-2 py-0.5 rounded text-xs font-bold ${ttClass}">${App.escapeHtml(tt)}</span>
+                </div>
+              </div>
+            `;
+         });
+         
+         listEl.innerHTML = html;
+         App.updateProgBulkBar();
+      },
+
+      updateProgBulkBar: () => {
+         const checked = document.querySelectorAll('.prog-chk:checked');
+         const bar = document.getElementById('prog-bulk-bar');
+         const countEl = document.getElementById('prog-bulk-count');
+         
+         if (checked.length > 0) {
+            if (bar) bar.classList.remove('hidden');
+            if (countEl) countEl.innerText = `Đã chọn ${checked.length} GV`;
+         } else {
+            if (bar) bar.classList.add('hidden');
+            if (countEl) countEl.innerText = '';
+         }
+         
+         const allChk = document.querySelectorAll('.prog-chk');
+         const selectAllChk = document.getElementById('chk-prog-all');
+         if (selectAllChk && allChk.length > 0) {
+            selectAllChk.checked = checked.length === allChk.length;
+            selectAllChk.indeterminate = checked.length > 0 && checked.length < allChk.length;
+         }
+      },
+
+      toggleProgSelectAll: (isChecked) => {
+         document.querySelectorAll('.prog-chk').forEach(chk => { chk.checked = isChecked; });
+         App.updateProgBulkBar();
+      },
+
+      updateProgressBulk: async (trangThai, btnEl) => {
+         const checked = document.querySelectorAll('.prog-chk:checked');
+         if (checked.length === 0) return;
+         
+         const dateInput = document.getElementById('prog-date').value;
+         const taskInput = document.getElementById('prog-task').value;
+         
+         if (!taskInput) {
+            App.showToast("Vui lòng nhập Tên công việc trước khi đánh dấu!", "error");
+            document.getElementById('prog-task').focus();
+            return;
+         }
+         
+         if (!confirm(`Xác nhận đánh dấu "${trangThai}" công việc "${taskInput}" cho ${checked.length} giáo viên?`)) return;
+         
+         const danhSach = Array.from(checked).map(chk => {
+            const row = chk.closest('.border-b');
+            const inputGhiChu = row ? row.querySelector('.prog-ghichu') : null;
+            return {
+               maGV: chk.dataset.magv,
+               hoTen: chk.dataset.hoten,
+               toChuyenMon: chk.dataset.to,
+               ghiChu: inputGhiChu ? inputGhiChu.value.trim() : ""
+            };
+         });
+         
+         const bar = document.getElementById('prog-bulk-bar');
+         const btns = bar ? bar.querySelectorAll('button') : [];
+         btns.forEach(b => { b.disabled = true; b.classList.add('opacity-50'); });
+         
+         const originalHtml = btnEl.innerHTML;
+         btnEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+         
+         try {
+            const res = await App.fetchAPI('capNhatTienDoBulk', 'POST', {
+               data: { ngay: dateInput, congViec: taskInput, trangThai, danhSach }
+            });
+            App.showToast(res.message || "Đã cập nhật tiến độ!", "success");
+            const selectAllChk = document.getElementById('chk-prog-all');
+            if (selectAllChk) selectAllChk.checked = false;
+            await App.fetchProgress();
+         } catch(e) {
+            App.showToast("Lỗi cập nhật: " + e.message, "error");
+         } finally {
+            btns.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
+            btnEl.innerHTML = originalHtml;
+         }
+      },
+
       init: async () => {
         try {
           // Lấy danh sách GV
@@ -1885,6 +2117,9 @@
           
           const teachFilterTo = document.getElementById('teach-filter-to');
           if (teachFilterTo) teachFilterTo.innerHTML = dashOpts.replace('-- Lọc theo Tổ chuyên môn --', '-- Xem tất cả Tổ chuyên môn --');
+
+          const progFilterTo = document.getElementById('prog-filter-to');
+          if (progFilterTo) progFilterTo.innerHTML = dashOpts.replace('-- Lọc theo Tổ chuyên môn --', '-- Xem tất cả Tổ chuyên môn --');
 
           // Dropdown Nhóm phụ - cố định 4 giá trị
           const dashFilterNhom = document.getElementById('dash-filter-nhom');

@@ -1776,7 +1776,7 @@
                     }
                  });
              }
-         } else {
+         } else if (type === 'giangday') {
              const rawData = App.state.reportData || {};
              const chiTiet = Array.isArray(rawData) ? rawData : (rawData.chiTiet || []);
              const tomTat  = Array.isArray(rawData) ? [] : (rawData.tomTat || []);

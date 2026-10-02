@@ -1878,7 +1878,10 @@
          if(exportBtns) exportBtns.style.display = 'none';
          
          const type = document.querySelector('input[name="report_type"]:checked').value;
-         const reportTitle = type === 'cuochop' ? 'BÁO CÁO TỔNG HỢP CUỘC HỌP' : 'BÁO CÁO TỔNG HỢP GIẢNG DẠY';
+         let reportTitle = 'BÁO CÁO TỔNG HỢP';
+         if (type === 'cuochop') reportTitle = 'BÁO CÁO TỔNG HỢP CUỘC HỌP';
+         else if (type === 'giangday') reportTitle = 'BÁO CÁO TỔNG HỢP GIẢNG DẠY';
+         else if (type === 'tiendo') reportTitle = 'BÁO CÁO TIẾN ĐỘ CÔNG VIỆC';
          
          // Thêm Header
          const pdfHeader = document.createElement('div');
@@ -1939,7 +1942,10 @@
             }
          }
          
-         const prefix = type === 'cuochop' ? 'CuocHop' : 'GiangDay';
+         let prefix = 'TongHop';
+         if (type === 'cuochop') prefix = 'CuocHop';
+         else if (type === 'giangday') prefix = 'GiangDay';
+         else if (type === 'tiendo') prefix = 'TienDo';
          
          const opt = {
             margin:       [0.5, 0.3, 0.5, 0.3], 

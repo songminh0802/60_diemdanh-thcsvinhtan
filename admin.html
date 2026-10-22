@@ -121,6 +121,20 @@
          </div>
       </div>
 
+      <!-- Thanh tìm nhanh giáo viên -->
+      <div class="mb-4 relative" id="dash-search-container">
+        <label for="dash-search-input" class="text-sm font-bold text-gray-700 flex items-center gap-1.5 mb-1.5">
+          <span>🔍 Tìm nhanh giáo viên</span>
+          <span class="text-xs text-gray-500 font-normal">(gõ không dấu, vd: cuong)</span>
+        </label>
+        <div class="relative">
+          <input type="text" id="dash-search-input" oninput="App.onDashSearchInput()" onfocus="App.onDashSearchFocus()" placeholder="Nhập tên giáo viên để tìm nhanh..." autocomplete="off" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-400 shadow-sm transition-all pr-10">
+          <button type="button" id="dash-clear-search-btn" onclick="App.clearDashSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl font-bold w-6 h-6 flex items-center justify-center leading-none">&times;</button>
+        </div>
+        <!-- Dropdown kết quả tức thì với trạng thái và nút điểm danh -->
+        <div id="dash-search-dropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-2xl p-2 max-h-80 overflow-y-auto z-50 divide-y divide-gray-100"></div>
+      </div>
+
       <!-- Các bộ lọc -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
          <select id="dash-filter-to" onchange="App.renderDashboard()" class="w-full border-2 border-blue-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-blue-50 text-blue-800 shadow-sm cursor-pointer hover:bg-blue-100 transition-colors">
@@ -444,6 +458,18 @@
          </div>
       </div>
       
+      <!-- Thanh tìm nhanh giáo viên -->
+      <div class="mb-4">
+        <label for="teach-search-input" class="text-sm font-bold text-gray-700 flex items-center gap-1.5 mb-1.5">
+          <span>🔍 Tìm nhanh giáo viên</span>
+          <span class="text-xs text-gray-500 font-normal">(gõ không dấu, vd: cuong)</span>
+        </label>
+        <div class="relative">
+          <input type="text" id="teach-search-input" oninput="App.onTeachSearchInput()" placeholder="Nhập tên giáo viên để tìm nhanh..." autocomplete="off" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white placeholder-gray-400 shadow-sm transition-all pr-10">
+          <button type="button" id="teach-clear-search-btn" onclick="App.clearTeachSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl font-bold w-6 h-6 flex items-center justify-center leading-none">&times;</button>
+        </div>
+      </div>
+      
       <!-- Bộ lọc tổ chuyên môn -->
       <div class="mb-4">
          <select id="teach-filter-to" onchange="App.renderTeachingList()" class="w-full border-2 border-indigo-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold bg-indigo-50 text-indigo-800 shadow-sm cursor-pointer hover:bg-indigo-100 transition-colors">
@@ -503,6 +529,18 @@
             <label class="block text-xs font-semibold text-gray-600 mb-1">Tên công việc</label>
             <input type="text" id="prog-task" onchange="App.fetchProgress()" placeholder="Nhập tên công việc (VD: Nộp giáo án)" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white">
          </div>
+      </div>
+      
+      <!-- Thanh tìm nhanh giáo viên -->
+      <div class="mb-4">
+        <label for="prog-search-input" class="text-sm font-bold text-gray-700 flex items-center gap-1.5 mb-1.5">
+          <span>🔍 Tìm nhanh giáo viên</span>
+          <span class="text-xs text-gray-500 font-normal">(gõ không dấu, vd: cuong)</span>
+        </label>
+        <div class="relative">
+          <input type="text" id="prog-search-input" oninput="App.onProgSearchInput()" placeholder="Nhập tên giáo viên để tìm nhanh..." autocomplete="off" class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white placeholder-gray-400 shadow-sm transition-all pr-10">
+          <button type="button" id="prog-clear-search-btn" onclick="App.clearProgSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl font-bold w-6 h-6 flex items-center justify-center leading-none">&times;</button>
+        </div>
       </div>
       
       <!-- Bộ lọc tổ chuyên môn -->
@@ -693,6 +731,9 @@
             }
          });
          
+         const dashDrop = document.getElementById('dash-search-dropdown');
+         if (dashDrop) dashDrop.classList.add('hidden');
+         
          if (tabName === 'teaching') {
             const dateInput = document.getElementById('teach-date');
             if (!dateInput.value) {
@@ -782,6 +823,173 @@
       },
 
       // ----------------------------------------
+      // Tìm kiếm nhanh giáo viên (không dấu)
+      // ----------------------------------------
+      removeVietnameseTones: (str) => {
+        if (!str) return '';
+        str = String(str);
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+        str = str.replace(/đ/g, 'd');
+        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, 'a');
+        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, 'e');
+        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, 'i');
+        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, 'o');
+        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, 'u');
+        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, 'y');
+        str = str.replace(/Đ/g, 'd');
+        str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, '');
+        str = str.replace(/\u02C6|\u0306|\u031B/g, '');
+        return str.toLowerCase().trim();
+      },
+
+      onDashSearchInput: () => {
+        const input = document.getElementById('dash-search-input');
+        const clearBtn = document.getElementById('dash-clear-search-btn');
+        const dropdown = document.getElementById('dash-search-dropdown');
+        if (!input) return;
+        
+        const rawVal = input.value;
+        const q = App.removeVietnameseTones(rawVal);
+        if (clearBtn) clearBtn.classList.toggle('hidden', !rawVal);
+        
+        App.renderDashboard();
+
+        if (!q) {
+          if (dropdown) {
+            dropdown.innerHTML = '';
+            dropdown.classList.add('hidden');
+          }
+          return;
+        }
+
+        const allTeachers = App.state.giaoVien || [];
+        const matches = allTeachers.filter(gv => {
+          const nameClean = App.removeVietnameseTones(gv.hoTen || '');
+          const toClean = App.removeVietnameseTones(gv.toChuyenMon || '');
+          return nameClean.includes(q) || toClean.includes(q);
+        });
+
+        if (!dropdown) return;
+        dropdown.classList.remove('hidden');
+
+        if (matches.length === 0) {
+          dropdown.innerHTML = `<div class="p-3 text-center text-sm text-gray-400 italic">Không tìm thấy giáo viên nào phù hợp</div>`;
+          return;
+        }
+
+        const attendanceMap = App.state.diemDanh || {};
+        let html = '';
+        matches.slice(0, 20).forEach(gv => {
+          const id = gv.maGV || gv.hoTen;
+          const ten = gv.hoTen || "Không rõ";
+          const to = gv.toChuyenMon || "Không rõ";
+          const att = attendanceMap[id];
+          
+          let statusBadge = '';
+          let actionBtns = '';
+
+          if (att) {
+            const tt = att.trangThai;
+            const gc = att.ghiChu ? ` - ${App.escapeHtml(att.ghiChu)}` : '';
+            if (tt === 'Có mặt') {
+              statusBadge = `<span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-bold">✅ Có mặt</span>`;
+            } else if (tt === 'Đi trễ') {
+              statusBadge = `<span class="bg-yellow-100 text-yellow-700 text-xs px-2.5 py-1 rounded-full font-bold">⏰ Đi trễ${gc}</span>`;
+            } else if (tt === 'Vắng phép') {
+              statusBadge = `<span class="bg-gray-100 text-gray-700 text-xs px-2.5 py-1 rounded-full font-bold">📄 V.Phép${gc}</span>`;
+            } else if (tt === 'Được miễn') {
+              statusBadge = `<span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-bold">🚫 Miễn</span>`;
+            } else {
+              statusBadge = `<span class="bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded-full font-bold">❗ ${App.escapeHtml(tt)}${gc}</span>`;
+            }
+          } else {
+            statusBadge = `<span class="text-xs text-orange-600 font-bold bg-orange-50 px-2 py-0.5 rounded border border-orange-200">⚠️ Chưa thao tác</span>`;
+            actionBtns = `
+              <div class="flex space-x-1 flex-shrink-0 ml-1">
+                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Có mặt',this)" title="Có mặt" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">✅</button>
+                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Đi trễ',this)" title="Đi trễ" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">⏰</button>
+                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Vắng phép',this)" title="Vắng phép" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">📄</button>
+                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Được miễn',this)" title="Được miễn" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">🚫</button>
+              </div>
+            `;
+          }
+
+          html += `
+            <div class="dash-search-item py-2 px-3 flex items-center justify-between hover:bg-blue-50/60 rounded-lg transition-colors">
+              <div class="min-w-0 flex-1 mr-2">
+                <div class="font-bold text-gray-800 text-sm truncate">${App.escapeHtml(ten)}</div>
+                <div class="text-xs text-gray-500">${App.escapeHtml(to)}</div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                ${statusBadge}
+                ${actionBtns}
+              </div>
+            </div>
+          `;
+        });
+
+        dropdown.innerHTML = html;
+      },
+
+      onDashSearchFocus: () => {
+        const input = document.getElementById('dash-search-input');
+        if (input && input.value.trim()) {
+          App.onDashSearchInput();
+        }
+      },
+
+      clearDashSearch: () => {
+        const input = document.getElementById('dash-search-input');
+        const clearBtn = document.getElementById('dash-clear-search-btn');
+        const dropdown = document.getElementById('dash-search-dropdown');
+        if (input) input.value = '';
+        if (clearBtn) clearBtn.classList.add('hidden');
+        if (dropdown) {
+          dropdown.innerHTML = '';
+          dropdown.classList.add('hidden');
+        }
+        App.renderDashboard();
+        if (input) input.focus();
+      },
+
+      onTeachSearchInput: () => {
+        const input = document.getElementById('teach-search-input');
+        const clearBtn = document.getElementById('teach-clear-search-btn');
+        if (clearBtn && input) clearBtn.classList.toggle('hidden', !input.value);
+        App.renderTeachingList();
+      },
+
+      clearTeachSearch: () => {
+        const input = document.getElementById('teach-search-input');
+        const clearBtn = document.getElementById('teach-clear-search-btn');
+        if (input) input.value = '';
+        if (clearBtn) clearBtn.classList.add('hidden');
+        App.renderTeachingList();
+        if (input) input.focus();
+      },
+
+      onProgSearchInput: () => {
+        const input = document.getElementById('prog-search-input');
+        const clearBtn = document.getElementById('prog-clear-search-btn');
+        if (clearBtn && input) clearBtn.classList.toggle('hidden', !input.value);
+        App.renderProgressList();
+      },
+
+      clearProgSearch: () => {
+        const input = document.getElementById('prog-search-input');
+        const clearBtn = document.getElementById('prog-clear-search-btn');
+        if (input) input.value = '';
+        if (clearBtn) clearBtn.classList.add('hidden');
+        App.renderProgressList();
+        if (input) input.focus();
+      },
+
+      // ----------------------------------------
       // Dashboard Logic
       // ----------------------------------------
       renderDashboard: () => {
@@ -801,6 +1009,16 @@
               if (selectedDashNhom === 'Chi bộ')     return gv.chiBo;
               if (selectedDashNhom === 'GVCN')       return gv.gvcn;
               return true;
+           });
+        }
+
+        const dashSearchVal = document.getElementById('dash-search-input')?.value || '';
+        const dashSearchQuery = App.removeVietnameseTones(dashSearchVal);
+        if (dashSearchQuery) {
+           allTeachers = allTeachers.filter(gv => {
+              const nameClean = App.removeVietnameseTones(gv.hoTen || '');
+              const toClean = App.removeVietnameseTones(gv.toChuyenMon || '');
+              return nameClean.includes(dashSearchQuery) || toClean.includes(dashSearchQuery);
            });
         }
 
@@ -1043,13 +1261,13 @@
             return;
          }
          
-         // Disable tất cả 3 nút trong row để tránh bấm đôi
-         const rowEl = btnEl.closest('div[class*="border-b"]');
-         const btns = rowEl ? rowEl.querySelectorAll('button') : [btnEl];
+         // Disable tất cả các nút trong row để tránh bấm đôi
+         const rowEl = btnEl ? (btnEl.closest('.dash-search-item') || btnEl.closest('div[class*="border-b"]')) : null;
+         const btns = rowEl ? rowEl.querySelectorAll('button') : (btnEl ? [btnEl] : []);
          btns.forEach(b => { b.disabled = true; b.classList.add('opacity-50'); });
          
-         const originalHtml = btnEl.innerHTML;
-         btnEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+         const originalHtml = btnEl ? btnEl.innerHTML : '';
+         if (btnEl) btnEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
          
          try {
             const res = await App.fetchAPI('diemDanhHo', 'POST', {
@@ -1059,12 +1277,15 @@
             
             // Làm mới dashboard sau khi ghi xong
             const btnRefresh = document.getElementById('btn-refresh-dash');
-            if (btnRefresh) App.refreshDashboard(btnRefresh);
+            if (btnRefresh) await App.refreshDashboard(btnRefresh);
+            if (document.getElementById('dash-search-input')?.value.trim()) {
+               App.onDashSearchInput();
+            }
          } catch(e) {
             App.showToast(e.message || "Lỗi khi điểm danh hộ!", "error");
          } finally {
             btns.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
-            btnEl.innerHTML = originalHtml;
+            if (btnEl) btnEl.innerHTML = originalHtml;
          }
       },
 
@@ -2007,11 +2228,21 @@
             allTeachers = allTeachers.filter(gv => gv.toChuyenMon === filterTo);
          }
          
+         const teachSearchVal = document.getElementById('teach-search-input')?.value || '';
+         const teachSearchQuery = App.removeVietnameseTones(teachSearchVal);
+         if (teachSearchQuery) {
+            allTeachers = allTeachers.filter(gv => {
+               const nameClean = App.removeVietnameseTones(gv.hoTen || '');
+               const toClean = App.removeVietnameseTones(gv.toChuyenMon || '');
+               return nameClean.includes(teachSearchQuery) || toClean.includes(teachSearchQuery);
+            });
+         }
+         
          const listEl = document.getElementById('teach-list');
          if (!listEl) return;
          
          if (allTeachers.length === 0) {
-            listEl.innerHTML = `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu giáo viên.</div>`;
+            listEl.innerHTML = `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu giáo viên${teachSearchQuery ? ' phù hợp với từ khóa tìm kiếm.' : '.'}</div>`;
             return;
          }
          
@@ -2159,11 +2390,21 @@
             allTeachers = allTeachers.filter(gv => gv.toChuyenMon === filterTo);
          }
          
+         const progSearchVal = document.getElementById('prog-search-input')?.value || '';
+         const progSearchQuery = App.removeVietnameseTones(progSearchVal);
+         if (progSearchQuery) {
+            allTeachers = allTeachers.filter(gv => {
+               const nameClean = App.removeVietnameseTones(gv.hoTen || '');
+               const toClean = App.removeVietnameseTones(gv.toChuyenMon || '');
+               return nameClean.includes(progSearchQuery) || toClean.includes(progSearchQuery);
+            });
+         }
+         
          const listEl = document.getElementById('prog-list');
          if (!listEl) return;
          
          if (allTeachers.length === 0) {
-            listEl.innerHTML = `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu giáo viên.</div>`;
+            listEl.innerHTML = `<div class="text-sm text-gray-400 italic p-2">Không có dữ liệu giáo viên${progSearchQuery ? ' phù hợp với từ khóa tìm kiếm.' : '.'}</div>`;
             return;
          }
          
@@ -2337,6 +2578,24 @@
            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
            App.init();
        }
+    });
+
+    // Lắng nghe click ngoài và phím Escape để đóng/reset dropdown tìm kiếm
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('dash-search-container');
+      const dropdown = document.getElementById('dash-search-dropdown');
+      if (dropdown && container && !container.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const active = document.activeElement;
+        if (active?.id === 'dash-search-input') App.clearDashSearch();
+        else if (active?.id === 'teach-search-input') App.clearTeachSearch();
+        else if (active?.id === 'prog-search-input') App.clearProgSearch();
+      }
     });
 
   </script>

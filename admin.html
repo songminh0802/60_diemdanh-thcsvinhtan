@@ -785,6 +785,43 @@
         return (unsafe || "").toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
       },
 
+      // Chuẩn hóa ngày sang định dạng Việt Nam (DD/MM/YYYY)
+      formatDateVN: (val) => {
+        if (!val) return '';
+        if (val instanceof Date) {
+          const d = String(val.getDate()).padStart(2, '0');
+          const m = String(val.getMonth() + 1).padStart(2, '0');
+          const y = val.getFullYear();
+          return `${d}/${m}/${y}`;
+        }
+        const str = String(val).trim();
+        // Nếu đã là DD/MM/YYYY
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(str)) {
+          return str;
+        }
+        // Nếu là YYYY-MM-DD hoặc ISO
+        const isoMatch = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+        if (isoMatch) {
+          const y = isoMatch[1];
+          const m = isoMatch[2].padStart(2, '0');
+          const d = isoMatch[3].padStart(2, '0');
+          return `${d}/${m}/${y}`;
+        }
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+        }
+        return str;
+      },
+
+      // Chuẩn hóa thời gian sang giờ Việt Nam (DD/MM/YYYY HH:mm:ss)
+      formatDateTimeVN: (val) => {
+        if (!val) return '';
+        const d = (val instanceof Date) ? val : new Date(val);
+        if (isNaN(d.getTime())) return String(val);
+        return d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      },
+
       // ----------------------------------------
       // API Calls
       // ----------------------------------------
@@ -1431,7 +1468,7 @@
             <div class="mt-3 inline-block bg-blue-100 text-blue-800 font-bold px-4 py-1 rounded-full text-sm">
                BÁO CÁO SĨ SỐ CUỘC HỌP
             </div>
-            <p class="text-xs text-gray-500 mt-2 italic">Ngày trích xuất: ${new Date().toLocaleString('vi-VN')}</p>
+            <p class="text-xs text-gray-500 mt-2 italic">Ngày trích xuất: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
          `;
          element.insertBefore(pdfHeader, element.firstChild);
          
@@ -1810,7 +1847,7 @@
             else if (item.trangThai === 'Bỏ tiết') ttClass = 'text-orange-600 font-bold';
             else if (item.trangThai === 'Công tác') ttClass = 'text-teal-600 font-bold';
             
-            const fDate = item.ngayDay.includes('-') ? item.ngayDay.split('-').reverse().join('/') : item.ngayDay;
+            const fDate = App.formatDateVN(item.ngayDay);
             html += `
                <tr class="border-b border-gray-100 hover:bg-orange-50 transition-colors">
                   <td class="px-4 py-2 font-semibold text-gray-700">${App.escapeHtml(fDate)}</td>
@@ -1915,7 +1952,7 @@
                
                detailsHtmlArr.push(`
                   <tr class="border-b border-gray-100 hover:bg-orange-50">
-                     <td class="px-4 py-2 font-semibold text-gray-700">${App.escapeHtml(item.ngayGiao)}</td>
+                     <td class="px-4 py-2 font-semibold text-gray-700">${App.escapeHtml(App.formatDateVN(item.ngayGiao))}</td>
                      <td class="px-4 py-2 font-bold">${App.escapeHtml(item.tenCongViec)}</td>
                      <td class="px-4 py-2 font-bold">${App.escapeHtml(item.hoTen)} <span class="text-xs text-gray-400">(${App.escapeHtml(item.toChuyenMon)})</span></td>
                      <td class="px-4 py-2 text-center ${ttClass}">${App.escapeHtml(item.trangThai)}</td>
@@ -1966,15 +2003,8 @@
          
          const type = document.querySelector('input[name="report_type"]:checked').value;
          
-         const formatDateVN = (dateStr) => {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            return dateStr;
-         };
-         
-         const tuNgay = formatDateVN(document.getElementById('rep-tu-ngay').value);
-         const denNgay = formatDateVN(document.getElementById('rep-den-ngay').value);
+         const tuNgay = App.formatDateVN(document.getElementById('rep-tu-ngay').value);
+         const denNgay = App.formatDateVN(document.getElementById('rep-den-ngay').value);
          
          let text = '';
          
@@ -2024,7 +2054,7 @@
                  text += `\n` + `-`.repeat(40) + `\n`;
                  text += `CHI TIẾT TỮNG LƯỢT VI PHẠM (${chiTiet.length} lượt):\n`;
                  chiTiet.forEach(item => {
-                    const fDate = item.ngayDay.includes('-') ? item.ngayDay.split('-').reverse().join('/') : item.ngayDay;
+                    const fDate = App.formatDateVN(item.ngayDay);
                     text += `- ${fDate} Buổi ${item.buoi}: ${item.hoTen} (${item.toChuyenMon}) - ${item.trangThai}`;
                     if (item.ghiChu) text += ` [${item.ghiChu}]`;
                     text += "\n";
@@ -2040,7 +2070,7 @@
                  if (item.trangThai === 'Chưa làm' || item.trangThai === 'Chưa nộp' || item.trangThai === 'Trễ hạn') {
                      countErr++;
                      if (!taskMap[item.tenCongViec]) {
-                         taskMap[item.tenCongViec] = { ngayGiao: item.ngayGiao, people: [] };
+                         taskMap[item.tenCongViec] = { ngayGiao: App.formatDateVN(item.ngayGiao), people: [] };
                      }
                      taskMap[item.tenCongViec].people.push(item);
                  }
@@ -2077,15 +2107,8 @@
             return;
          }
          
-         const formatDateVN = (dateStr) => {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            return dateStr;
-         };
-         
-         const tuNgay = formatDateVN(document.getElementById('rep-tu-ngay').value);
-         const denNgay = formatDateVN(document.getElementById('rep-den-ngay').value);
+         const tuNgay = App.formatDateVN(document.getElementById('rep-tu-ngay').value);
+         const denNgay = App.formatDateVN(document.getElementById('rep-den-ngay').value);
          
          const element = document.getElementById('view-report');
          
@@ -2115,7 +2138,7 @@
                ${reportTitle}
             </div>
             <p class="text-sm font-bold text-gray-700 mt-3">Giai đoạn: ${tuNgay} - ${denNgay}</p>
-            <p class="text-xs text-gray-500 mt-1 italic">Ngày trích xuất: ${new Date().toLocaleString('vi-VN')}</p>
+            <p class="text-xs text-gray-500 mt-1 italic">Ngày trích xuất: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>
          `;
          element.insertBefore(pdfHeader, element.firstChild);
          
@@ -2324,7 +2347,8 @@
          const shiftInput = document.getElementById('teach-shift').value;
          const updaterInput = document.getElementById('teach-updater').value;
          
-         if (!confirm(`Xác nhận đánh dấu "${trangThai}" cho ${checked.length} giáo viên vào Buổi ${shiftInput} ngày ${dateInput}?`)) return;
+         const fDate = App.formatDateVN(dateInput);
+         if (!confirm(`Xác nhận đánh dấu "${trangThai}" cho ${checked.length} giáo viên vào Buổi ${shiftInput} ngày ${fDate}?`)) return;
          
          const danhSach = Array.from(checked).map(chk => {
             const row = chk.closest('.border-b');
@@ -2491,7 +2515,8 @@
             return;
          }
          
-         if (!confirm(`Xác nhận đánh dấu "${trangThai}" công việc "${taskInput}" cho ${checked.length} giáo viên?`)) return;
+         const fDate = App.formatDateVN(dateInput);
+         if (!confirm(`Xác nhận đánh dấu "${trangThai}" công việc "${taskInput}" (ngày ${fDate}) cho ${checked.length} giáo viên?`)) return;
          
          const danhSach = Array.from(checked).map(chk => {
             const row = chk.closest('.border-b');

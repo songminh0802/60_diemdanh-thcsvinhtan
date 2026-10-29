@@ -2066,6 +2066,7 @@
       exportToGoogleSheet: async (btnEl) => {
          const tuNgay = document.getElementById('rep-tu-ngay').value;
          const denNgay = document.getElementById('rep-den-ngay').value;
+         const reportType = document.querySelector('input[name="report_type"]:checked')?.value || 'toandien';
 
          if (!tuNgay || !denNgay) {
             App.showToast("Vui lòng chọn đầy đủ thời gian Từ ngày và Đến ngày trước khi xuất file!", "error");
@@ -2085,8 +2086,8 @@
          }
 
          try {
-            App.showToast("Đang tạo bảng tính trên Google Drive, vui lòng chờ trong giây lát...", "info", 4000);
-            const res = await App.fetchAPI('xuatBaoCaoTrangTinh', 'POST', { data: { tuNgay, denNgay } });
+            App.showToast("Đang tạo bảng tính chi tiết trên Google Drive, vui lòng chờ trong giây lát...", "info", 4000);
+            const res = await App.fetchAPI('xuatBaoCaoTrangTinh', 'POST', { data: { tuNgay, denNgay, reportType } });
 
             if (res && res.success && res.url) {
                window.open(res.url, '_blank');
@@ -2095,7 +2096,7 @@
                const titleEl = document.getElementById('modal-export-title');
                const linkEl = document.getElementById('modal-export-link');
                if (modal && titleEl && linkEl) {
-                  titleEl.innerText = res.title || "Báo cáo tổng hợp THCS Vĩnh Tân";
+                  titleEl.innerText = res.title || "Báo cáo chi tiết THCS Vĩnh Tân";
                   linkEl.href = res.url;
                   modal.classList.remove('hidden');
                }
@@ -2105,7 +2106,7 @@
                throw new Error(res?.message || "Không nhận được liên kết bảng tính từ hệ thống.");
             }
          } catch (err) {
-            App.showToast("Lỗi khi xuất bảng tính: " + err.message, "error", 5000);
+            App.showToast("Lỗi khi xuất bảng tính: " + err.message, "error", 6000);
          } finally {
             if (btnEl) {
                btnEl.disabled = false;

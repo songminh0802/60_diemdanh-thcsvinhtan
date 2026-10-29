@@ -592,6 +592,7 @@
     // ==========================================
     // CẤU HÌNH HỆ THỐNG
     const API_URL = "https://script.google.com/macros/s/AKfycbylHFTlm6JDI9K20vqI4DI3WX7uU0fteTxcccMMwYX0hxl31JJg93O3lwmNZSPf6Wo_/exec";
+    const ADMIN_PASSWORD = "admin123";
     
     // ==========================================
     // FIREBASE CONFIG
@@ -660,6 +661,7 @@
        },
        
        grantAdminAccess: (user) => {
+          App.state.currentUser = user;
           document.getElementById('auth-screen').classList.add('hidden');
           document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
           
@@ -669,6 +671,21 @@
           document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/150';
           document.getElementById('user-name').innerText = user.displayName || user.email;
           
+          // Tự động gán người cập nhật lịch dạy theo tên Admin đang đăng nhập
+          const teachUpdater = document.getElementById('teach-updater');
+          if (teachUpdater && user.displayName) {
+            let exists = false;
+            for (let i = 0; i < teachUpdater.options.length; i++) {
+              if (teachUpdater.options[i].value === user.displayName) { exists = true; break; }
+            }
+            if (!exists) {
+              const opt = new Option(user.displayName, user.displayName, true, true);
+              teachUpdater.add(opt, 0);
+            } else {
+              teachUpdater.value = user.displayName;
+            }
+          }
+
           // Khởi động app
           App.init();
        }
@@ -710,7 +727,9 @@
         progressData: {}, // { "maGV": { trangThai, ghiChu } }
         toChuyenMon: new Set(),
         historyList: [], // Lưu danh sách các cuộc họp
-        reportData: []
+        dashReportData: { missing: [], lateAbsent: [] }, // Tách riêng cho Dashboard, Chốt sổ, Copy Zalo
+        reportData: [], // Dành riêng cho Báo cáo tổng hợp
+        currentUser: null
       },
 
       // ----------------------------------------
@@ -837,7 +856,7 @@
               ...options,
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action, ...data })
+              body: JSON.stringify({ action, adminPassword: ADMIN_PASSWORD, ...data })
             };
           }
           const response = await fetch(url, options);
@@ -887,12 +906,20 @@
       onDashSearchInput: () => {
         const input = document.getElementById('dash-search-input');
         const clearBtn = document.getElementById('dash-clear-search-btn');
-        const dropdown = document.getElementById('dash-search-dropdown');
         if (!input) return;
         
         const rawVal = input.value;
-        const q = App.removeVietnameseTones(rawVal);
         if (clearBtn) clearBtn.classList.toggle('hidden', !rawVal);
+        
+        if (App._dashSearchTimer) clearTimeout(App._dashSearchTimer);
+        App._dashSearchTimer = setTimeout(() => {
+          App._executeDashSearch(rawVal);
+        }, 120);
+      },
+
+      _executeDashSearch: (rawVal) => {
+        const dropdown = document.getElementById('dash-search-dropdown');
+        const q = App.removeVietnameseTones(rawVal);
         
         App.renderDashboard();
 
@@ -976,7 +1003,7 @@
       onDashSearchFocus: () => {
         const input = document.getElementById('dash-search-input');
         if (input && input.value.trim()) {
-          App.onDashSearchInput();
+          App._executeDashSearch(input.value);
         }
       },
 
@@ -998,7 +1025,8 @@
         const input = document.getElementById('teach-search-input');
         const clearBtn = document.getElementById('teach-clear-search-btn');
         if (clearBtn && input) clearBtn.classList.toggle('hidden', !input.value);
-        App.renderTeachingList();
+        if (App._teachSearchTimer) clearTimeout(App._teachSearchTimer);
+        App._teachSearchTimer = setTimeout(() => App.renderTeachingList(), 120);
       },
 
       clearTeachSearch: () => {
@@ -1014,7 +1042,8 @@
         const input = document.getElementById('prog-search-input');
         const clearBtn = document.getElementById('prog-clear-search-btn');
         if (clearBtn && input) clearBtn.classList.toggle('hidden', !input.value);
-        App.renderProgressList();
+        if (App._progSearchTimer) clearTimeout(App._progSearchTimer);
+        App._progSearchTimer = setTimeout(() => App.renderProgressList(), 120);
       },
 
       clearProgSearch: () => {
@@ -1074,19 +1103,14 @@
          let meetingTime = 0;
          
          if (maCuocHop !== 'current') {
-            const dateMatch = maCuocHop.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+            const dateMatch = maCuocHop.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
             if (dateMatch) {
                meetingTime = new Date(dateMatch[3], dateMatch[2] - 1, dateMatch[1]).getTime();
             }
          } else {
-            const dateVal = document.getElementById('inp-date')?.value;
-            if (dateVal) {
-               meetingTime = new Date(dateVal).getTime();
-            } else {
-               const today = new Date();
-               today.setHours(0,0,0,0);
-               meetingTime = today.getTime();
-            }
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            meetingTime = today.getTime();
          }
          
          // Bỏ qua những giáo viên chưa vào làm tại thời điểm diễn ra cuộc họp
@@ -1140,8 +1164,8 @@
         document.getElementById('dash-absent').innerText = absentLateCount;
         document.getElementById('dash-missing').innerText = missingCount;
         
-        // Lưu tạm vào state để dùng cho tính năng Copy Báo Cáo
-        App.state.reportData = {
+        // Lưu tạm vào state để dùng cho tính năng Copy Báo Cáo & Chốt sổ Dashboard
+        App.state.dashReportData = {
            missing: missingList,
            lateAbsent: absentLateList
         };
@@ -1327,7 +1351,7 @@
       },
 
       chotSo: async (btnEl) => {
-         const rd = App.state.reportData || { missing: [], lateAbsent: [] };
+         const rd = App.state.dashReportData || { missing: [], lateAbsent: [] };
          const missingList = rd.missing;
          if (!missingList || missingList.length === 0) return;
          
@@ -1377,19 +1401,14 @@
          let meetingTime = 0;
          
          if (maCuocHop !== 'current') {
-            const dateMatch = maCuocHop.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+            const dateMatch = maCuocHop.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
             if (dateMatch) {
                meetingTime = new Date(dateMatch[3], dateMatch[2] - 1, dateMatch[1]).getTime();
             }
          } else {
-            const dateVal = document.getElementById('inp-date')?.value;
-            if (dateVal) {
-               meetingTime = new Date(dateVal).getTime();
-            } else {
-               const today = new Date();
-               today.setHours(0,0,0,0);
-               meetingTime = today.getTime();
-            }
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            meetingTime = today.getTime();
          }
          
          const selectedTo   = document.getElementById('dash-filter-to')?.value || 'all';
@@ -1525,7 +1544,7 @@
         const submitted = document.getElementById('dash-submitted').innerText;
         const present = document.getElementById('dash-present').innerText;
         
-        const rd = App.state.reportData || { missing: [], lateAbsent: [] };
+        const rd = App.state.dashReportData || { missing: [], lateAbsent: [] };
         
         let reportText = `BÁO CÁO SĨ SỐ:\n📌 ${reportTitle.toUpperCase()}\n`;
         reportText += `▶ Tổng GV: ${total} | Đã Đ.Danh: ${submitted} | Có mặt: ${present}\n`;
@@ -1564,7 +1583,19 @@
                App.showToast("Vui lòng chọn 1 cuộc họp để xem", "error");
                return;
            }
-           const res = await App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop: val } });
+           
+           // Làm mới đồng thời dữ liệu điểm danh và danh sách GV
+           const [res, gvList] = await Promise.all([
+             App.fetchAPI('getDiemDanhByCuocHop', 'POST', { data: { maCuocHop: val } }),
+             App.fetchAPI('getGiaoVien').catch(() => null)
+           ]);
+
+           if (gvList && Array.isArray(gvList)) {
+             App.state.giaoVien = gvList;
+             sessionStorage.setItem('CACHE_GIAOVIEN_ADMIN', JSON.stringify(gvList));
+             App.setupTeacherFilters();
+           }
+
            App.state.diemDanh = res.map;
            App.renderDashboard();
            App.showToast("Đã cập nhật dữ liệu sĩ số mới nhất!", "success");
@@ -1582,31 +1613,35 @@
          try {
              const res = await App.fetchAPI('getLichSuCuocHop', 'POST', {});
              const select = document.getElementById('dash-history-select');
-             let html = ``;
+             let html = `<option value="current">Hôm nay (Tất cả điểm danh hôm nay)</option>`;
              
              if(res && res.length > 0) {
                  App.state.historyList = res;
                  res.forEach(ma => {
-                     const parts = ma.split('_');
                      let text = ma;
-                     if (parts.length >= 3) {
-                         const dateParts = parts[1].split('-');
-                         const dateStr = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : parts[1];
-                         const type = parts[2];
-                         const extra = parts.slice(3).join(' ').trim();
-                         text = `${dateStr} - ${type}${extra ? ` (${extra})` : ''}`;
+                     if (ma.includes('_')) {
+                         const parts = ma.split('_');
+                         if (parts.length >= 3) {
+                             const dateParts = parts[1].split('-');
+                             const dateStr = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : parts[1];
+                             const type = parts[2];
+                             const extra = parts.slice(3).join(' ').trim();
+                             text = `${dateStr} - ${type}${extra ? ` (${extra})` : ''}`;
+                         }
                      }
                      html += `<option value="${ma}">${text}</option>`;
                  });
-             } else {
-                 html = `<option value="" disabled selected>Chưa có dữ liệu cuộc họp nào</option>`;
              }
              
              select.innerHTML = html;
              
-             // Auto load the first meeting if available
+             // Mặc định chọn cuộc họp gần nhất nếu có, hoặc Hôm nay
              if (res && res.length > 0) {
-                 App.onSelectHistory();
+                 select.value = res[0];
+                 await App.onSelectHistory();
+             } else {
+                 select.value = "current";
+                 await App.onSelectHistory();
              }
          } catch(e) {
              console.error("Lỗi tải lịch sử", e);
@@ -2552,43 +2587,64 @@
          }
       },
 
+      setupTeacherFilters: () => {
+        App.state.toChuyenMon = new Set(App.state.giaoVien.map(gv => gv.toChuyenMon).filter(Boolean));
+        
+        // Đổ dữ liệu vào Dropdown Tổ
+        let dashOpts = `<option value="all">-- Lọc theo Tổ chuyên môn --</option>`;
+        Array.from(App.state.toChuyenMon).sort().forEach(to => {
+          dashOpts += `<option value="${App.escapeHtml(to)}">${App.escapeHtml(to)}</option>`;
+        });
+        const dashFilterTo = document.getElementById('dash-filter-to');
+        if (dashFilterTo) dashFilterTo.innerHTML = dashOpts;
+        
+        const teachFilterTo = document.getElementById('teach-filter-to');
+        if (teachFilterTo) teachFilterTo.innerHTML = dashOpts.replace('-- Lọc theo Tổ chuyên môn --', '-- Xem tất cả Tổ chuyên môn --');
+
+        const progFilterTo = document.getElementById('prog-filter-to');
+        if (progFilterTo) progFilterTo.innerHTML = dashOpts.replace('-- Lọc theo Tổ chuyên môn --', '-- Xem tất cả Tổ chuyên môn --');
+
+        // Dropdown Nhóm phụ - cố định 5 giá trị
+        const dashFilterNhom = document.getElementById('dash-filter-nhom');
+        if (dashFilterNhom && dashFilterNhom.options.length <= 1) {
+          dashFilterNhom.innerHTML = `
+            <option value="all">-- Lọc theo Cơ sở / Nhóm --</option>
+            <option value="Phân hiệu">Phân hiệu</option>
+            <option value="Trung tâm">Trung tâm</option>
+            <option value="Điểm chính">Điểm chính</option>
+            <option value="Chi bộ">Chi bộ</option>
+            <option value="GVCN">Giáo viên chủ nhiệm (GVCN)</option>
+          `;
+        }
+      },
+
       init: async () => {
         try {
-          // Lấy danh sách GV
-          App.state.giaoVien = await App.fetchAPI('getGiaoVien');
-          App.state.toChuyenMon = new Set(App.state.giaoVien.map(gv => gv.toChuyenMon).filter(Boolean));
-          
-          // Đổ dữ liệu vào Dropdown Tổ
-          let dashOpts = `<option value="all">-- Lọc theo Tổ chuyên môn --</option>`;
-          Array.from(App.state.toChuyenMon).sort().forEach(to => {
-            dashOpts += `<option value="${App.escapeHtml(to)}">${App.escapeHtml(to)}</option>`;
-          });
-          const dashFilterTo = document.getElementById('dash-filter-to');
-          if (dashFilterTo) dashFilterTo.innerHTML = dashOpts;
-          
-          const teachFilterTo = document.getElementById('teach-filter-to');
-          if (teachFilterTo) teachFilterTo.innerHTML = dashOpts.replace('-- Lọc theo Tổ chuyên môn --', '-- Xem tất cả Tổ chuyên môn --');
-
-          const progFilterTo = document.getElementById('prog-filter-to');
-          if (progFilterTo) progFilterTo.innerHTML = dashOpts.replace('-- Lọc theo Tổ chuyên môn --', '-- Xem tất cả Tổ chuyên môn --');
-
-          // Dropdown Nhóm phụ - cố định 4 giá trị
-          const dashFilterNhom = document.getElementById('dash-filter-nhom');
-          if (dashFilterNhom) {
-            dashFilterNhom.innerHTML = `
-              <option value="all">-- Lọc theo Cơ sở / Nhóm --</option>
-              <option value="Phân hiệu">Phân hiệu</option>
-              <option value="Trung tâm">Trung tâm</option>
-              <option value="Điểm chính">Điểm chính</option>
-              <option value="Chi bộ">Chi bộ</option>
-              <option value="GVCN">Giáo viên chủ nhiệm (GVCN)</option>
-            `;
+          // 1. Kiểm tra cache trong sessionStorage để render ngay lập tức (0ms)
+          const cachedGV = sessionStorage.getItem('CACHE_GIAOVIEN_ADMIN');
+          if (cachedGV) {
+            try {
+              App.state.giaoVien = JSON.parse(cachedGV);
+              App.setupTeacherFilters();
+            } catch(e) {
+              console.warn("Lỗi đọc cache GV:", e);
+            }
           }
 
-          // Lấy danh sách lịch sử cuộc họp
-          await App.loadHistory();
+          // 2. Tải song song danh sách GV mới nhất và Lịch sử cuộc họp (Parallel loading)
+          const [gvList] = await Promise.all([
+            App.fetchAPI('getGiaoVien'),
+            App.loadHistory()
+          ]);
+
+          if (gvList && Array.isArray(gvList)) {
+            App.state.giaoVien = gvList;
+            sessionStorage.setItem('CACHE_GIAOVIEN_ADMIN', JSON.stringify(gvList));
+            App.setupTeacherFilters();
+          }
 
         } catch (error) {
+          console.error("Init Error:", error);
           App.showToast("Không thể tải dữ liệu. Vui lòng F5 thử lại.", 'error');
         }
       }

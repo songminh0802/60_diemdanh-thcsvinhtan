@@ -627,9 +627,14 @@
       </div>
       
       <!-- Danh sách -->
-      <h3 class="text-sm font-bold text-gray-700 uppercase mb-3 bg-gray-100 p-2 rounded-lg flex justify-between items-center">
-         <div><i class="fas fa-list text-orange-500 mr-2"></i> Danh sách Giáo viên</div>
-      </h3>
+      <div class="flex items-center justify-between mb-3 bg-gray-100 p-2.5 rounded-xl border border-gray-200">
+         <div class="text-xs sm:text-sm font-bold text-gray-700 uppercase flex items-center">
+            <i class="fas fa-list text-orange-500 mr-2"></i> Danh sách Giáo viên
+         </div>
+         <button type="button" onclick="App.openProgPasteModal()" class="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
+            <i class="fas fa-paste"></i> 📋 Dán danh sách (Zalo)
+         </button>
+      </div>
       
       <!-- Thanh chọn tất cả -->
       <div id="prog-bulk-header" class="flex items-center justify-between mb-2 px-2">
@@ -678,6 +683,62 @@
            </a>
            <button onclick="document.getElementById('modal-export-sheet').classList.add('hidden')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-4 rounded-xl text-xs transition-colors">
               Đóng thông báo
+           </button>
+        </div>
+     </div>
+  </div>
+
+  <!-- Modal Dán Danh Sách Zalo cho Tiến Độ Công Việc -->
+  <div id="modal-prog-paste" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden animate-fade-in">
+     <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 border-2 border-orange-400 flex flex-col max-h-[92vh]">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+           <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-base">
+                 <i class="fas fa-paste"></i>
+              </span>
+              <div>
+                 <h3 class="text-base font-black text-gray-800 uppercase tracking-wide">Nhập nhanh từ Zalo / Tin nhắn</h3>
+                 <p class="text-xs text-gray-500">Tự động nhận diện tên giáo viên, bỏ số thứ tự & tên tổ</p>
+              </div>
+           </div>
+           <button onclick="App.closeProgPasteModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none p-1 cursor-pointer">&times;</button>
+        </div>
+
+        <div class="my-3 flex-1 overflow-y-auto space-y-3">
+           <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 leading-relaxed">
+              💡 <b>Cách dùng:</b> Copy toàn bộ tin nhắn Zalo và dán vào ô dưới. Hệ thống tự động lọc bỏ số thứ tự <i>(1., 2/...)</i>, gạch đầu dòng <i>(-, *)</i> và tên tổ trong ngoặc <i>(KHXH-NT, Toán...)</i> để khớp chính xác giáo viên!
+           </div>
+
+           <div>
+              <div class="flex justify-between items-center mb-1">
+                 <label class="text-xs font-bold text-gray-700">Dán nội dung tin nhắn Zalo vào đây:</label>
+                 <button type="button" onclick="App.clearProgPasteInput()" class="text-xs text-gray-400 hover:text-red-500 font-semibold cursor-pointer">Xóa ô dán</button>
+              </div>
+              <textarea id="prog-paste-text" rows="6" oninput="App.onProgPasteInput()" 
+                placeholder="Ví dụ dán vào đây:&#10;1. Nguyễn Thị Minh Tiến (KHXH-NT)&#10;2. Nguyễn Thị Tuyết Trâm (KHXH-NT)&#10;3. Nguyễn Thị May (KHXH-NT)..." 
+                class="w-full border-2 border-orange-200 rounded-xl p-3 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white placeholder-gray-400 resize-none"></textarea>
+           </div>
+
+           <!-- Kết quả nhận diện trực tiếp -->
+           <div id="prog-paste-result-box" class="hidden border rounded-xl p-3 bg-gray-50 text-xs">
+              <div class="flex items-center justify-between font-bold mb-2">
+                 <span id="prog-paste-match-summary" class="text-gray-700"></span>
+              </div>
+              <div id="prog-paste-match-list" class="max-h-36 overflow-y-auto flex flex-wrap gap-1 pr-1 text-xs"></div>
+           </div>
+        </div>
+
+        <div class="pt-3 border-t border-gray-100 flex flex-col gap-2">
+           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button id="btn-prog-paste-apply" onclick="App.applyProgPasteSelection()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                 <i class="fas fa-check-square"></i> Tích chọn trên bảng
+              </button>
+              <button id="btn-prog-paste-quick-chualam" onclick="App.quickMarkProgFromPaste('Chưa làm')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                 <i class="fas fa-times-circle"></i> Đánh dấu "Chưa làm" ngay
+              </button>
+           </div>
+           <button onclick="App.closeProgPasteModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-3 rounded-xl text-xs transition-colors cursor-pointer">
+              Đóng lại
            </button>
         </div>
      </div>
@@ -2891,6 +2952,255 @@
          } finally {
             btns.forEach(b => { b.disabled = false; b.classList.remove('opacity-50'); });
             btnEl.innerHTML = originalHtml;
+         }
+      },
+
+      // ----------------------------------------
+      // Nhập nhanh từ Zalo / Text cho Tiến độ
+      // ----------------------------------------
+      openProgPasteModal: () => {
+         const modal = document.getElementById('modal-prog-paste');
+         if (modal) modal.classList.remove('hidden');
+         const txt = document.getElementById('prog-paste-text');
+         if (txt) {
+            txt.focus();
+            App.onProgPasteInput();
+         }
+      },
+
+      closeProgPasteModal: () => {
+         const modal = document.getElementById('modal-prog-paste');
+         if (modal) modal.classList.add('hidden');
+      },
+
+      clearProgPasteInput: () => {
+         const txt = document.getElementById('prog-paste-text');
+         if (txt) txt.value = '';
+         App.onProgPasteInput();
+      },
+
+      parsePastedTeacherText: (rawText) => {
+         if (!rawText) return { matched: [], unmatched: [], totalLines: 0 };
+         const lines = rawText.split(/[\r\n;]+/).map(s => s.trim()).filter(Boolean);
+         const allTeachers = App.state.giaoVien || [];
+         
+         const matched = [];
+         const unmatched = [];
+         const seenMaGV = new Set();
+         
+         lines.forEach(raw => {
+            let s = raw.trim();
+            // Bỏ số thứ tự đầu dòng: "1.", "1/", "1-", "1)", "[1]", "(1)"
+            s = s.replace(/^[\(\[]?\d+[\.\-\/\)\]]?\s*/, "");
+            // Bỏ ký tự đầu dòng: -, *, +, •
+            s = s.replace(/^[\-\*\+\•\⁃]\s*/, "");
+            // Bỏ tiền tố xưng hô: Thầy, Cô, Đ/c, Đc, Đồng chí, Anh, Chị
+            s = s.replace(/^(thầy|cô|bác|anh|chị|đ\/c|đc|đồng chí)\s+/i, "");
+            // Bỏ tất cả cụm trong ngoặc đơn, ngoặc vuông, ngoặc nhọn
+            s = s.replace(/\([^\)]*\)/g, "");
+            s = s.replace(/\[[^\]]*\]/g, "");
+            s = s.replace(/\{[^\}]*\}/g, "");
+            // Bỏ mô tả sau dấu gạch ngang (nếu còn)
+            s = s.replace(/\s*[\-\–\—].*$/, "");
+            // Chuẩn hóa khoảng trắng
+            s = s.replace(/\s+/g, " ").trim();
+            
+            if (!s) return;
+            
+            const cleanLower = s.toLowerCase();
+            const cleanToneFree = App.removeVietnameseTones(s).toLowerCase();
+            
+            // Tìm giáo viên phù hợp
+            let gv = allTeachers.find(t => {
+               const tLower = (t.hoTen || "").toLowerCase().trim();
+               if (tLower === cleanLower) return true;
+               const tToneFree = App.removeVietnameseTones(t.hoTen || "").toLowerCase().trim();
+               if (tToneFree === cleanToneFree) return true;
+               if (t.maGV && t.maGV.toLowerCase() === cleanLower) return true;
+               return false;
+            });
+            
+            // Fallback so khớp chứa từ nếu có họ tên đầy đủ
+            if (!gv && cleanToneFree.includes(" ")) {
+               gv = allTeachers.find(t => {
+                  const tToneFree = App.removeVietnameseTones(t.hoTen || "").toLowerCase().trim();
+                  return tToneFree.includes(cleanToneFree) || cleanToneFree.includes(tToneFree);
+               });
+            }
+            
+            if (gv && !seenMaGV.has(gv.maGV)) {
+               seenMaGV.add(gv.maGV);
+               matched.push(gv);
+            } else if (!gv) {
+               unmatched.push(s);
+            }
+         });
+         
+         return { matched, unmatched, totalLines: lines.length };
+      },
+
+      onProgPasteInput: () => {
+         const txt = document.getElementById('prog-paste-text');
+         const box = document.getElementById('prog-paste-result-box');
+         const sumEl = document.getElementById('prog-paste-match-summary');
+         const listEl = document.getElementById('prog-paste-match-list');
+         const btnApply = document.getElementById('btn-prog-paste-apply');
+         const btnQuick = document.getElementById('btn-prog-paste-quick-chualam');
+         
+         if (!txt || !box) return;
+         const rawVal = txt.value.trim();
+         
+         if (!rawVal) {
+            box.classList.add('hidden');
+            if (btnApply) btnApply.disabled = true;
+            if (btnQuick) btnQuick.disabled = true;
+            return;
+         }
+         
+         const { matched, unmatched, totalLines } = App.parsePastedTeacherText(rawVal);
+         box.classList.remove('hidden');
+         
+         if (btnApply) btnApply.disabled = matched.length === 0;
+         if (btnQuick) btnQuick.disabled = matched.length === 0;
+         
+         if (sumEl) {
+            if (matched.length > 0 && unmatched.length === 0) {
+               sumEl.innerHTML = `<span class="text-emerald-700 font-bold"><i class="fas fa-check-circle mr-1 text-emerald-600"></i> Khớp chính xác ${matched.length}/${totalLines} giáo viên</span>`;
+            } else if (matched.length > 0 && unmatched.length > 0) {
+               sumEl.innerHTML = `<span class="text-amber-700 font-bold"><i class="fas fa-exclamation-triangle mr-1 text-amber-600"></i> Khớp ${matched.length}/${totalLines} GV (Không khớp: ${unmatched.length})</span>`;
+            } else {
+               sumEl.innerHTML = `<span class="text-red-600 font-bold"><i class="fas fa-times-circle mr-1"></i> Không tìm thấy giáo viên nào phù hợp</span>`;
+            }
+         }
+         
+         if (listEl) {
+            let html = '';
+            matched.forEach(gv => {
+               html += `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-semibold border border-emerald-200">
+                  <i class="fas fa-check text-emerald-600"></i> ${App.escapeHtml(gv.hoTen)} <span class="text-emerald-600 text-[10px]">(${App.escapeHtml(gv.toChuyenMon || '')})</span>
+               </span>`;
+            });
+            unmatched.forEach(name => {
+               html += `<span class="inline-flex items-center gap-1 bg-red-100 text-red-800 px-2 py-0.5 rounded text-[11px] font-semibold border border-red-200">
+                  <i class="fas fa-question text-red-500"></i> ? ${App.escapeHtml(name)}
+               </span>`;
+            });
+            listEl.innerHTML = html;
+         }
+      },
+
+      applyProgPasteSelection: () => {
+         const txt = document.getElementById('prog-paste-text');
+         const { matched, unmatched } = App.parsePastedTeacherText(txt ? txt.value : '');
+         
+         if (matched.length === 0) {
+            App.showToast("Chưa nhận diện được giáo viên nào trong danh sách dán!", "error");
+            return;
+         }
+         
+         // 1. Reset bộ lọc Tổ & tìm kiếm để hiển thị tất cả GV
+         const filterTo = document.getElementById('prog-filter-to');
+         if (filterTo) filterTo.value = 'all';
+         const searchInput = document.getElementById('prog-search-input');
+         if (searchInput) searchInput.value = '';
+         const clearBtn = document.getElementById('prog-clear-search-btn');
+         if (clearBtn) clearBtn.classList.add('hidden');
+         
+         // 2. Render lại danh sách
+         App.renderProgressList();
+         
+         // 3. Bỏ chọn tất cả trước
+         document.querySelectorAll('.prog-chk').forEach(c => c.checked = false);
+         
+         // 4. Tích chọn các giáo viên đã khớp
+         const matchedMaSet = new Set(matched.map(m => m.maGV));
+         let checkedCount = 0;
+         let firstEl = null;
+         
+         document.querySelectorAll('.prog-chk').forEach(chk => {
+            if (matchedMaSet.has(chk.dataset.magv)) {
+               chk.checked = true;
+               checkedCount++;
+               if (!firstEl) firstEl = chk;
+               const row = chk.closest('.border-b');
+               if (row) {
+                  row.classList.add('bg-orange-50', 'ring-1', 'ring-orange-300');
+                  setTimeout(() => {
+                     row.classList.remove('bg-orange-50', 'ring-1', 'ring-orange-300');
+                  }, 5000);
+               }
+            }
+         });
+         
+         // 5. Cập nhật thanh hành động hàng loạt
+         App.updateProgBulkBar();
+         App.closeProgPasteModal();
+         
+         if (unmatched.length > 0) {
+            App.showToast(`Đã chọn ${checkedCount} GV. Không tìm thấy ${unmatched.length}: ${unmatched.slice(0, 3).join(', ')}${unmatched.length > 3 ? '...' : ''}`, "warning");
+         } else {
+            App.showToast(`✅ Đã tự động tích chọn ${checkedCount} giáo viên từ danh sách!`, "success");
+         }
+         
+         // Cuộn nhẹ tới hàng đầu tiên hoặc thanh hành động
+         if (firstEl) {
+            firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+         }
+      },
+
+      quickMarkProgFromPaste: async (trangThai) => {
+         const txt = document.getElementById('prog-paste-text');
+         const { matched } = App.parsePastedTeacherText(txt ? txt.value : '');
+         
+         if (matched.length === 0) {
+            App.showToast("Chưa nhận diện được giáo viên nào trong danh sách dán!", "error");
+            return;
+         }
+         
+         const taskInput = document.getElementById('prog-task');
+         let taskName = taskInput ? taskInput.value.trim() : '';
+         if (!taskName) {
+            taskName = prompt("Vui lòng nhập Tên công việc (VD: Nộp giáo án tuần 9):");
+            if (!taskName || !taskName.trim()) {
+               App.showToast("Bạn chưa nhập Tên công việc!", "error");
+               return;
+            }
+            if (taskInput) taskInput.value = taskName.trim();
+         }
+         
+         const dateInput = document.getElementById('prog-date').value;
+         const fDate = App.formatDateVN(dateInput);
+         
+         if (!confirm(`Xác nhận đánh dấu "${trangThai}" công việc "${taskName}" (ngày ${fDate}) cho ${matched.length} giáo viên vừa dán?`)) return;
+         
+         const danhSach = matched.map(gv => ({
+            maGV: gv.maGV,
+            hoTen: gv.hoTen,
+            toChuyenMon: gv.toChuyenMon,
+            ghiChu: ""
+         }));
+         
+         const quickBtn = document.getElementById('btn-prog-paste-quick-chualam');
+         const origHtml = quickBtn ? quickBtn.innerHTML : '';
+         if (quickBtn) {
+            quickBtn.disabled = true;
+            quickBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Đang lưu...`;
+         }
+         
+         try {
+            const res = await App.fetchAPI('capNhatTienDoBulk', 'POST', {
+               data: { ngay: dateInput, congViec: taskName, trangThai, danhSach }
+            });
+            App.showToast(res.message || `Đã đánh dấu "${trangThai}" cho ${matched.length} giáo viên!`, "success");
+            App.closeProgPasteModal();
+            await App.fetchProgress();
+         } catch(e) {
+            App.showToast("Lỗi cập nhật: " + e.message, "error");
+         } finally {
+            if (quickBtn) {
+               quickBtn.disabled = false;
+               quickBtn.innerHTML = origHtml;
+            }
          }
       },
 

@@ -210,8 +210,11 @@
         <!-- Render from JS -->
       </div>
       <!-- Thanh action nổi khi chọn nhiều người -->
-      <div id="bulk-action-bar" class="hidden mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3">
-        <div class="text-xs font-bold text-blue-700 mb-2">✓ Đã chọn <span id="bulk-selected-count">0</span> người. Chọn trạng thái để ghi hàng loạt:</div>
+      <div id="bulk-action-bar" class="hidden mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3 sticky bottom-4 shadow-xl z-20">
+        <div class="text-xs font-bold text-blue-700 mb-2">✓ Đã chọn <span id="bulk-selected-count">0</span> người. Nhập lý do (nếu có) và chọn trạng thái:</div>
+        <div class="mb-2">
+          <input type="text" id="dash-bulk-lydo" placeholder="Nhập lý do / ghi chú chung cho những người đã chọn (hoặc nhập riêng từng dòng)..." class="w-full border border-blue-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-400">
+        </div>
         <div class="grid grid-cols-4 gap-2">
           <button onclick="App.diemHoBulk('Có mặt',this)" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">✅ Có mặt</button>
           <button onclick="App.diemHoBulk('Đi trễ',this)" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">⏰ Đi trễ</button>
@@ -572,8 +575,11 @@
       </div>
       
       <!-- Thanh hành động -->
-      <div id="teach-bulk-bar" class="hidden mb-4 bg-indigo-50 border border-indigo-200 rounded-xl p-3 sticky bottom-4 shadow-xl">
+      <div id="teach-bulk-bar" class="hidden mb-4 bg-indigo-50 border border-indigo-200 rounded-xl p-3 sticky bottom-4 shadow-xl z-20">
         <div class="text-xs font-bold text-indigo-700 mb-2">Đánh dấu trạng thái hàng loạt cho những người đã chọn:</div>
+        <div class="mb-2">
+          <input type="text" id="teach-bulk-lydo" placeholder="Nhập lý do / ghi chú chung cho các GV đã chọn (hoặc nhập riêng từng dòng)..." class="w-full border border-indigo-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white placeholder-gray-400">
+        </div>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
           <button onclick="App.updateTeachingBulk('Bình thường',this)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">✅ Bình thường</button>
           <button onclick="App.updateTeachingBulk('Đi trễ',this)" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">⏰ Đi trễ</button>
@@ -650,8 +656,11 @@
       </div>
       
       <!-- Thanh hành động -->
-      <div id="prog-bulk-bar" class="hidden mb-4 bg-orange-50 border border-orange-200 rounded-xl p-3 sticky bottom-4 shadow-xl">
+      <div id="prog-bulk-bar" class="hidden mb-4 bg-orange-50 border border-orange-200 rounded-xl p-3 sticky bottom-4 shadow-xl z-20">
         <div class="text-xs font-bold text-orange-700 mb-2">Đánh dấu tiến độ hàng loạt cho những người đã chọn:</div>
+        <div class="mb-2">
+          <input type="text" id="prog-bulk-ghichu" placeholder="Nhập lý do / ghi chú chung cho các GV đã chọn (hoặc nhập riêng từng dòng)..." class="w-full border border-orange-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white placeholder-gray-400">
+        </div>
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <button onclick="App.updateProgressBulk('Hoàn thành',this)" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">✅ Hoàn thành</button>
           <button onclick="App.updateProgressBulk('Chưa làm',this)" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs py-2 rounded-lg transition-all active:scale-95">❌ Chưa làm</button>
@@ -725,6 +734,11 @@
                  <span id="prog-paste-match-summary" class="text-gray-700"></span>
               </div>
               <div id="prog-paste-match-list" class="max-h-36 overflow-y-auto flex flex-wrap gap-1 pr-1 text-xs"></div>
+           </div>
+
+           <div>
+              <label class="block text-xs font-bold text-gray-700 mb-1">Lý do / Ghi chú chung (nếu có):</label>
+              <input type="text" id="prog-paste-ghichu" placeholder="Nhập lý do / ghi chú áp dụng cho danh sách vừa dán..." class="w-full border border-orange-200 rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white placeholder-gray-400">
            </div>
         </div>
 
@@ -1115,7 +1129,7 @@
           const att = attendanceMap[id];
           
           let statusBadge = '';
-          let actionBtns = '';
+          const existingGhiChu = (att && att.ghiChu && !att.ghiChu.startsWith('Admin điểm danh hộ')) ? att.ghiChu : '';
 
           if (att) {
             const tt = att.trangThai;
@@ -1127,30 +1141,31 @@
             } else if (tt === 'Vắng phép') {
               statusBadge = `<span class="bg-gray-100 text-gray-700 text-xs px-2.5 py-1 rounded-full font-bold">📄 V.Phép${gc}</span>`;
             } else if (tt === 'Được miễn') {
-              statusBadge = `<span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-bold">🚫 Miễn</span>`;
+              statusBadge = `<span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-bold">🚫 Miễn${gc}</span>`;
             } else {
               statusBadge = `<span class="bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded-full font-bold">❗ ${App.escapeHtml(tt)}${gc}</span>`;
             }
           } else {
             statusBadge = `<span class="text-xs text-orange-600 font-bold bg-orange-50 px-2 py-0.5 rounded border border-orange-200">⚠️ Chưa thao tác</span>`;
-            actionBtns = `
-              <div class="flex space-x-1 flex-shrink-0 ml-1">
-                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Có mặt',this)" title="Có mặt" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">✅</button>
-                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Đi trễ',this)" title="Đi trễ" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">⏰</button>
-                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Vắng phép',this)" title="Vắng phép" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">📄</button>
-                <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Được miễn',this)" title="Được miễn" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">🚫</button>
-              </div>
-            `;
           }
 
+          const actionBtns = `
+            <div class="flex items-center gap-1 flex-shrink-0">
+              <input type="text" class="dash-lydo w-28 sm:w-40 border border-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white placeholder-gray-400" placeholder="Nhập lý do..." value="${App.escapeHtml(existingGhiChu)}">
+              <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Có mặt',this)" title="Có mặt" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">✅</button>
+              <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Đi trễ',this)" title="Đi trễ" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">⏰</button>
+              <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Vắng phép',this)" title="Vắng phép" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">📄</button>
+              <button onclick="App.diemHo('${App.escapeHtml(id)}','${App.escapeHtml(ten)}','${App.escapeHtml(to)}','Được miễn',this)" title="Được miễn" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">🚫</button>
+            </div>
+          `;
+
           html += `
-            <div class="dash-search-item py-2 px-3 flex items-center justify-between hover:bg-blue-50/60 rounded-lg transition-colors">
+            <div class="dash-search-item py-2 px-3 flex flex-wrap items-center justify-between gap-2 hover:bg-blue-50/60 rounded-lg transition-colors">
               <div class="min-w-0 flex-1 mr-2">
-                <div class="font-bold text-gray-800 text-sm truncate">${App.escapeHtml(ten)}</div>
-                <div class="text-xs text-gray-500">${App.escapeHtml(to)}</div>
+                <div class="font-bold text-gray-800 text-sm truncate">${App.escapeHtml(ten)} <span class="font-normal text-xs text-gray-500">(${App.escapeHtml(to)})</span></div>
+                <div class="mt-0.5">${statusBadge}</div>
               </div>
               <div class="flex items-center gap-1.5 flex-shrink-0">
-                ${statusBadge}
                 ${actionBtns}
               </div>
             </div>
@@ -1358,16 +1373,19 @@
            
            return arr.map((item, idx) => `
              <div class="p-2 border-b border-gray-100 last:border-0 text-sm" data-idx="${idx}">
-               <div class="flex items-center justify-between">
-                 ${isMissing ? `<input type="checkbox" class="mr-2 rounded flex-shrink-0 missing-chk" 
-                   data-magv="${App.escapeHtml(item.maGV)}" 
-                   data-hoten="${App.escapeHtml(item.ten)}" 
-                   data-to="${App.escapeHtml(item.to)}"
-                   onchange="App.updateBulkBar()">` : ''}
-                 <div class="flex-1 min-w-0"><span class="font-bold text-gray-700">${App.escapeHtml(item.ten)}</span> <span class="text-xs text-gray-400">(${App.escapeHtml(item.to)})</span></div>
+               <div class="flex items-center justify-between gap-2">
+                 <div class="flex items-center gap-2 flex-1 min-w-0">
+                   ${isMissing ? `<input type="checkbox" class="mr-1 rounded flex-shrink-0 missing-chk" 
+                     data-magv="${App.escapeHtml(item.maGV)}" 
+                     data-hoten="${App.escapeHtml(item.ten)}" 
+                     data-to="${App.escapeHtml(item.to)}"
+                     onchange="App.updateBulkBar()">
+                   <input type="text" class="dash-lydo w-28 sm:w-40 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 placeholder-gray-400 flex-shrink-0" placeholder="Nhập lý do..." oninput="const c=this.closest('.border-b')?.querySelector('.missing-chk'); if(c && !c.checked && this.value.trim()){c.checked=true; App.updateBulkBar();}">` : ''}
+                   <div class="flex-1 min-w-0 truncate"><span class="font-bold text-gray-700">${App.escapeHtml(item.ten)}</span> <span class="text-xs text-gray-400">(${App.escapeHtml(item.to)})</span></div>
+                 </div>
                  ${!isMissing
                    ? `<span class="px-2 py-0.5 rounded text-xs font-bold flex-shrink-0 ml-2 ${item.tt === 'Được miễn' ? 'bg-blue-100 text-blue-700' : (item.tt === 'Đi trễ' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}">${App.escapeHtml(item.tt)} ${item.ghiChu ? '- ' + App.escapeHtml(item.ghiChu) : ''}</span>`
-                   : `<div class="flex space-x-1 flex-shrink-0 ml-2">
+                   : `<div class="flex space-x-1 flex-shrink-0 ml-1">
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Có mặt',this)" title="Có mặt" class="bg-green-100 hover:bg-green-200 text-green-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">✅</button>
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Đi trễ',this)" title="Đi trễ" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">⏰</button>
                        <button onclick="App.diemHo('${App.escapeHtml(item.maGV)}','${App.escapeHtml(item.ten)}','${App.escapeHtml(item.to)}','Vắng phép',this)" title="Vắng phép" class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-xs px-2 py-1 rounded-lg transition-all active:scale-95">📄</button>
@@ -1444,12 +1462,21 @@
          
          if (!confirm(`Xác nhận điểm danh hộ ${checked.length} người với trạng thái "${trangThai}"?`)) return;
          
-         // Gom dữ liệu tất cả người được chọn
-         const danhSach = Array.from(checked).map(chk => ({
-            maGV: chk.dataset.magv,
-            hoTen: chk.dataset.hoten,
-            toChuyenMon: chk.dataset.to
-         }));
+         const bulkLyDoEl = document.getElementById('dash-bulk-lydo');
+         const bulkLyDo = bulkLyDoEl ? bulkLyDoEl.value.trim() : '';
+
+         // Gom dữ liệu tất cả người được chọn (ưu tiên lý do từng dòng, nếu trống lấy lý do chung)
+         const danhSach = Array.from(checked).map(chk => {
+            const row = chk.closest('.border-b');
+            const inputLyDo = row ? row.querySelector('.dash-lydo') : null;
+            const rowLyDo = inputLyDo ? inputLyDo.value.trim() : '';
+            return {
+               maGV: chk.dataset.magv,
+               hoTen: chk.dataset.hoten,
+               toChuyenMon: chk.dataset.to,
+               ghiChu: rowLyDo || bulkLyDo
+            };
+         });
          
          // Disable thanh action
          const bar = document.getElementById('bulk-action-bar');
@@ -1460,9 +1487,10 @@
          
          try {
             const res = await App.fetchAPI('diemDanhHoBulk', 'POST', {
-               data: { maCuocHop, trangThai, danhSach }
+               data: { maCuocHop, trangThai, ghiChu: bulkLyDo, danhSach }
             });
             App.showToast(res.message || `Đã điểm danh hộ ${danhSach.length} người!`, "success");
+            if (bulkLyDoEl) bulkLyDoEl.value = '';
             
             const btnRefresh = document.getElementById('btn-refresh-dash');
             if (btnRefresh) App.refreshDashboard(btnRefresh);
@@ -1484,6 +1512,9 @@
          
          // Disable tất cả các nút trong row để tránh bấm đôi
          const rowEl = btnEl ? (btnEl.closest('.dash-search-item') || btnEl.closest('div[class*="border-b"]')) : null;
+         const lydoInput = rowEl ? rowEl.querySelector('.dash-lydo') : null;
+         const bulkLyDoEl = document.getElementById('dash-bulk-lydo');
+         const ghiChu = (lydoInput ? lydoInput.value.trim() : '') || (bulkLyDoEl ? bulkLyDoEl.value.trim() : '');
          const btns = rowEl ? rowEl.querySelectorAll('button') : (btnEl ? [btnEl] : []);
          btns.forEach(b => { b.disabled = true; b.classList.add('opacity-50'); });
          
@@ -1492,7 +1523,7 @@
          
          try {
             const res = await App.fetchAPI('diemDanhHo', 'POST', {
-               data: { maCuocHop, maGV, hoTen, toChuyenMon, trangThai }
+               data: { maCuocHop, maGV, hoTen, toChuyenMon, trangThai, ghiChu }
             });
             App.showToast(res.message || "Đã điểm danh hộ!", "success");
             
@@ -2698,7 +2729,7 @@
                     data-hoten="${App.escapeHtml(gv.hoTen)}" 
                     data-to="${App.escapeHtml(gv.toChuyenMon)}"
                     onchange="App.updateTeachBulkBar()">
-                  <input type="text" class="teach-lydo w-28 sm:w-40 mr-3 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-indigo-500 placeholder-gray-400" placeholder="Lý do..." value="${App.escapeHtml(ghiChu)}">
+                  <input type="text" class="teach-lydo w-28 sm:w-40 mr-3 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-indigo-500 placeholder-gray-400" placeholder="Nhập lý do..." value="${App.escapeHtml(ghiChu)}" oninput="const c=this.closest('.border-b')?.querySelector('.teach-chk'); if(c && !c.checked && this.value.trim()){c.checked=true; App.updateTeachBulkBar();}">
                   <div class="flex-1 min-w-0">
                      <span class="font-bold text-gray-700">${App.escapeHtml(gv.hoTen)}</span> 
                      <span class="text-xs text-gray-400">(${App.escapeHtml(gv.toChuyenMon)})</span>
@@ -2753,14 +2784,18 @@
          const fDate = App.formatDateVN(dateInput);
          if (!confirm(`Xác nhận đánh dấu "${trangThai}" cho ${checked.length} giáo viên vào Buổi ${shiftInput} ngày ${fDate}?`)) return;
          
+         const bulkLyDoEl = document.getElementById('teach-bulk-lydo');
+         const bulkLyDo = bulkLyDoEl ? bulkLyDoEl.value.trim() : '';
+
          const danhSach = Array.from(checked).map(chk => {
             const row = chk.closest('.border-b');
             const inputLyDo = row ? row.querySelector('.teach-lydo') : null;
+            const rowLyDo = inputLyDo ? inputLyDo.value.trim() : "";
             return {
                maGV: chk.dataset.magv,
                hoTen: chk.dataset.hoten,
                toChuyenMon: chk.dataset.to,
-               ghiChu: inputLyDo ? inputLyDo.value.trim() : ""
+               ghiChu: rowLyDo || bulkLyDo
             };
          });
          
@@ -2776,6 +2811,7 @@
                data: { ngayDay: dateInput, buoi: shiftInput, trangThai, danhSach, nguoiCapNhat: updaterInput }
             });
             App.showToast(res.message || "Đã cập nhật giảng dạy!", "success");
+            if (bulkLyDoEl) bulkLyDoEl.value = '';
             const selectAllChk = document.getElementById('chk-teach-all');
             if (selectAllChk) selectAllChk.checked = false;
             await App.fetchTeaching();
@@ -2862,14 +2898,14 @@
                     data-hoten="${App.escapeHtml(gv.hoTen)}" 
                     data-to="${App.escapeHtml(gv.toChuyenMon)}"
                     onchange="App.updateProgBulkBar()">
-                  <input type="text" class="prog-ghichu w-28 sm:w-40 mr-3 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-500 placeholder-gray-400" placeholder="Ghi chú..." value="${App.escapeHtml(ghiChu)}">
+                  <input type="text" class="prog-ghichu w-28 sm:w-40 mr-3 border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:border-orange-500 placeholder-gray-400" placeholder="Nhập lý do / ghi chú..." value="${App.escapeHtml(ghiChu)}" oninput="const c=this.closest('.border-b')?.querySelector('.prog-chk'); if(c && !c.checked && this.value.trim()){c.checked=true; App.updateProgBulkBar();}">
                   <div class="flex-1 min-w-0">
                      <span class="font-bold text-gray-700">${App.escapeHtml(gv.hoTen)}</span> 
                      <span class="text-xs text-gray-400">(${App.escapeHtml(gv.toChuyenMon)})</span>
                   </div>
                 </div>
                 <div class="flex space-x-1 flex-shrink-0 ml-2 items-center">
-                  <span class="px-2 py-0.5 rounded text-xs font-bold ${ttClass}">${App.escapeHtml(tt)}</span>
+                  <span class="px-2 py-0.5 rounded text-xs font-bold ${ttClass}">${App.escapeHtml(tt)}${ghiChu ? ' - ' + App.escapeHtml(ghiChu) : ''}</span>
                 </div>
               </div>
             `;
@@ -2921,14 +2957,18 @@
          const fDate = App.formatDateVN(dateInput);
          if (!confirm(`Xác nhận đánh dấu "${trangThai}" công việc "${taskInput}" (ngày ${fDate}) cho ${checked.length} giáo viên?`)) return;
          
+         const bulkGhiChuEl = document.getElementById('prog-bulk-ghichu');
+         const bulkGhiChu = bulkGhiChuEl ? bulkGhiChuEl.value.trim() : '';
+
          const danhSach = Array.from(checked).map(chk => {
             const row = chk.closest('.border-b');
             const inputGhiChu = row ? row.querySelector('.prog-ghichu') : null;
+            const rowGhiChu = inputGhiChu ? inputGhiChu.value.trim() : "";
             return {
                maGV: chk.dataset.magv,
                hoTen: chk.dataset.hoten,
                toChuyenMon: chk.dataset.to,
-               ghiChu: inputGhiChu ? inputGhiChu.value.trim() : ""
+               ghiChu: rowGhiChu || bulkGhiChu
             };
          });
          
@@ -2944,6 +2984,7 @@
                data: { ngay: dateInput, congViec: taskInput, trangThai, danhSach }
             });
             App.showToast(res.message || "Đã cập nhật tiến độ!", "success");
+            if (bulkGhiChuEl) bulkGhiChuEl.value = '';
             const selectAllChk = document.getElementById('chk-prog-all');
             if (selectAllChk) selectAllChk.checked = false;
             await App.fetchProgress();
@@ -2976,6 +3017,8 @@
       clearProgPasteInput: () => {
          const txt = document.getElementById('prog-paste-text');
          if (txt) txt.value = '';
+         const gc = document.getElementById('prog-paste-ghichu');
+         if (gc) gc.value = '';
          App.onProgPasteInput();
       },
 
@@ -3132,7 +3175,12 @@
             }
          });
          
-         // 5. Cập nhật thanh hành động hàng loạt
+         // 5. Cập nhật thanh hành động hàng loạt & điền sẵn lý do chung (nếu có)
+         const pasteGhiChu = document.getElementById('prog-paste-ghichu')?.value.trim() || '';
+         if (pasteGhiChu) {
+            const bulkGhiChuEl = document.getElementById('prog-bulk-ghichu');
+            if (bulkGhiChuEl) bulkGhiChuEl.value = pasteGhiChu;
+         }
          App.updateProgBulkBar();
          App.closeProgPasteModal();
          
@@ -3173,11 +3221,12 @@
          
          if (!confirm(`Xác nhận đánh dấu "${trangThai}" công việc "${taskName}" (ngày ${fDate}) cho ${matched.length} giáo viên vừa dán?`)) return;
          
+         const pasteGhiChu = document.getElementById('prog-paste-ghichu')?.value.trim() || '';
          const danhSach = matched.map(gv => ({
             maGV: gv.maGV,
             hoTen: gv.hoTen,
             toChuyenMon: gv.toChuyenMon,
-            ghiChu: ""
+            ghiChu: pasteGhiChu
          }));
          
          const quickBtn = document.getElementById('btn-prog-paste-quick-chualam');
